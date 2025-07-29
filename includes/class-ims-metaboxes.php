@@ -87,7 +87,7 @@ class Metaboxes {
         </p>
         <p>
             <label><?php _e( 'Upload Invoice:', 'invoice-management-system' ); ?></label><br>
-            <input type="file" name="_invoice_file" accept="application/pdf,image/jpeg" />
+            <input type="file" name="_invoice_file" accept="application/pdf,image/jpeg" <?php echo empty( $file_id ) ? 'required' : ''; ?>  />
             <?php if ( $file_id ) : ?>
                 <br><a href="<?php echo esc_url( wp_get_attachment_url( $file_id ) ); ?>" target="_blank"><?php _e( 'View Uploaded File', 'invoice-management-system' ); ?></a>
             <?php endif; ?>
@@ -138,55 +138,75 @@ class Metaboxes {
     }
 
     public function save_metaboxes( $post_id, $post ) {
-        // Invoice Details
+        // Verify nonces
         if ( ! isset( $_POST['ims_invoice_details_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_details_nonce'], 'ims_invoice_details_nonce' ) ) {
             return;
         }
+
+        if ( ! isset( $_POST['ims_invoice_status_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_status_nonce'], 'ims_invoice_status_nonce' ) ) {
+            return;
+        }
+
+        if ( ! isset( $_POST['ims_email_receivers_nonce'] ) || ! wp_verify_nonce( $_POST['ims_email_receivers_nonce'], 'ims_email_receivers_nonce' ) ) {
+            return;
+        }
+
+        // Sanitize and validate
         $invoice_date    = sanitize_text_field( $_POST['_invoice_date'] );
         $submission_date = sanitize_text_field( $_POST['_submission_date'] );
+
         if ( strtotime( $invoice_date ) >= strtotime( $submission_date ) ) {
             wp_die( __( 'Invoice Date must be before Submission Date.', 'invoice-management-system' ) );
         }
+
+        // Ensure file exists or is uploaded
+        $existing_file = get_post_meta( $post_id, '_invoice_file_id', true );
+        $new_file      = ! empty( $_FILES['_invoice_file']['name'] );
+        if ( ! $existing_file && ! $new_file ) {
+            wp_die( __( 'Invoice file upload is required.', 'invoice-management-system' ) );
+        }
+
+        // Update meta values
         update_post_meta( $post_id, '_invoice_date', $invoice_date );
         update_post_meta( $post_id, '_submission_date', $submission_date );
-
-        $amount = floatval( $_POST['_invoice_amount'] );
-        update_post_meta( $post_id, '_invoice_amount', $amount );
+        update_post_meta( $post_id, '_invoice_amount', floatval( $_POST['_invoice_amount'] ) );
 
         // Handle file upload
-        if ( ! empty( $_FILES['_invoice_file']['name'] ) ) {
-            $file = $_FILES['_invoice_file'];
+        if ( $new_file ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+
+            $file    = $_FILES['_invoice_file'];
             $allowed = [ 'application/pdf', 'image/jpeg' ];
+
             if ( in_array( $file['type'], $allowed, true ) ) {
                 $attach_id = media_handle_upload( '_invoice_file', $post_id );
                 if ( is_wp_error( $attach_id ) ) {
                     wp_die( $attach_id->get_error_message() );
                 }
                 update_post_meta( $post_id, '_invoice_file_id', $attach_id );
+            } else {
+                wp_die( __( 'Only PDF or JPEG files are allowed.', 'invoice-management-system' ) );
             }
         }
 
         // Invoice Status
-        if ( ! isset( $_POST['ims_invoice_status_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_status_nonce'], 'ims_invoice_status_nonce' ) ) {
-            return;
-        }
         $status = sanitize_text_field( $_POST['_invoice_status'] );
         update_post_meta( $post_id, '_invoice_status', $status );
-        if ( $status === 'paid' ) {
-            $payment_date = sanitize_text_field( $_POST['_payment_date'] );
-            update_post_meta( $post_id, '_payment_date', $payment_date );
+
+        if ( $status === 'paid' && ! empty( $_POST['_payment_date'] ) ) {
+            update_post_meta( $post_id, '_payment_date', sanitize_text_field( $_POST['_payment_date'] ) );
         } else {
             delete_post_meta( $post_id, '_payment_date' );
         }
 
         // Email Receivers
-        if ( ! isset( $_POST['ims_email_receivers_nonce'] ) || ! wp_verify_nonce( $_POST['ims_email_receivers_nonce'], 'ims_email_receivers_nonce' ) ) {
-            return;
-        }
-        $to_email = sanitize_email( $_POST['_to_email'] );
-        update_post_meta( $post_id, '_to_email', $to_email );
+        update_post_meta( $post_id, '_to_email', sanitize_email( $_POST['_to_email'] ) );
 
-        $cc_emails = array_map( 'sanitize_email', (array) $_POST['_cc_emails'] );
+        $cc_emails = array_filter(
+            array_map( 'sanitize_email', (array) $_POST['_cc_emails'] )
+        );
         update_post_meta( $post_id, '_cc_emails', $cc_emails );
     }
 

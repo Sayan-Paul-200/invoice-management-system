@@ -70,7 +70,7 @@ class CPT {
             'label'                 => __( 'Invoice', 'invoice-management-system' ),
             'description'           => __( 'Manage your invoices', 'invoice-management-system' ),
             'labels'                => $labels,
-            'supports'              => [ 'title' ],
+            'supports'              => [ 'title', 'editor' ],
             'taxonomies'            => [ /* e.g. 'invoice-status', 'invoice-client' */ ],
             'hierarchical'          => false,
             'public'                => true,

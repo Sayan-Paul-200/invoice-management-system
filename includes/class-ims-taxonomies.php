@@ -36,60 +36,52 @@ class Taxonomies {
      * Register custom taxonomies for Invoices
      */
     public function register_taxonomies() {
-        // Project (non-hierarchical)
+        // Project (hierarchical, category-like)
         $labels_project = [
-            'name'                       => _x( 'Projects', 'Taxonomy General Name', 'invoice-management-system' ),
-            'singular_name'              => _x( 'Project', 'Taxonomy Singular Name', 'invoice-management-system' ),
-            'menu_name'                  => __( 'Projects', 'invoice-management-system' ),
-            'all_items'                  => __( 'All Projects', 'invoice-management-system' ),
-            'edit_item'                  => __( 'Edit Project', 'invoice-management-system' ),
-            'update_item'                => __( 'Update Project', 'invoice-management-system' ),
-            'add_new_item'               => __( 'Add New Project', 'invoice-management-system' ),
-            'new_item_name'              => __( 'New Project Name', 'invoice-management-system' ),
-            'search_items'               => __( 'Search Projects', 'invoice-management-system' ),
-            'popular_items'              => __( 'Popular Projects', 'invoice-management-system' ),
-            'separate_items_with_commas' => __( 'Separate projects with commas', 'invoice-management-system' ),
-            'add_or_remove_items'        => __( 'Add or remove projects', 'invoice-management-system' ),
-            'choose_from_most_used'      => __( 'Choose from the most used', 'invoice-management-system' ),
-            'not_found'                  => __( 'No projects found', 'invoice-management-system' ),
+            'name'              => _x( 'Projects', 'taxonomy general name', 'invoice-management-system' ),
+            'singular_name'     => _x( 'Project', 'taxonomy singular name', 'invoice-management-system' ),
+            'search_items'      => __( 'Search Projects', 'invoice-management-system' ),
+            'all_items'         => __( 'All Projects', 'invoice-management-system' ),
+            'parent_item'       => __( 'Parent Project', 'invoice-management-system' ),
+            'parent_item_colon' => __( 'Parent Project:', 'invoice-management-system' ),
+            'edit_item'         => __( 'Edit Project', 'invoice-management-system' ),
+            'update_item'       => __( 'Update Project', 'invoice-management-system' ),
+            'add_new_item'      => __( 'Add New Project', 'invoice-management-system' ),
+            'new_item_name'     => __( 'New Project Name', 'invoice-management-system' ),
+            'menu_name'         => __( 'Projects', 'invoice-management-system' ),
         ];
         $args_project = [
             'labels'            => $labels_project,
-            'hierarchical'      => false,
+            'hierarchical'      => true,
             'public'            => true,
             'show_ui'           => true,
-            'show_in_nav_menus' => true,
             'show_admin_column' => true,
-            'update_count_callback' => '_update_post_term_count',
+            'show_in_nav_menus' => true,
             'rewrite'           => [ 'slug' => 'project' ],
         ];
         register_taxonomy( 'project', [ 'invoice' ], $args_project );
 
-        // Location (non-hierarchical)
+        // Location (hierarchical, category-like)
         $labels_location = [
-            'name'                       => _x( 'Locations', 'Taxonomy General Name', 'invoice-management-system' ),
-            'singular_name'              => _x( 'Location', 'Taxonomy Singular Name', 'invoice-management-system' ),
-            'menu_name'                  => __( 'Locations', 'invoice-management-system' ),
-            'all_items'                  => __( 'All Locations', 'invoice-management-system' ),
-            'edit_item'                  => __( 'Edit Location', 'invoice-management-system' ),
-            'update_item'                => __( 'Update Location', 'invoice-management-system' ),
-            'add_new_item'               => __( 'Add New Location', 'invoice-management-system' ),
-            'new_item_name'              => __( 'New Location Name', 'invoice-management-system' ),
-            'search_items'               => __( 'Search Locations', 'invoice-management-system' ),
-            'popular_items'              => __( 'Popular Locations', 'invoice-management-system' ),
-            'separate_items_with_commas' => __( 'Separate locations with commas', 'invoice-management-system' ),
-            'add_or_remove_items'        => __( 'Add or remove locations', 'invoice-management-system' ),
-            'choose_from_most_used'      => __( 'Choose from the most used', 'invoice-management-system' ),
-            'not_found'                  => __( 'No locations found', 'invoice-management-system' ),
+            'name'              => _x( 'Locations', 'taxonomy general name', 'invoice-management-system' ),
+            'singular_name'     => _x( 'Location', 'taxonomy singular name', 'invoice-management-system' ),
+            'search_items'      => __( 'Search Locations', 'invoice-management-system' ),
+            'all_items'         => __( 'All Locations', 'invoice-management-system' ),
+            'parent_item'       => __( 'Parent Location', 'invoice-management-system' ),
+            'parent_item_colon' => __( 'Parent Location:', 'invoice-management-system' ),
+            'edit_item'         => __( 'Edit Location', 'invoice-management-system' ),
+            'update_item'       => __( 'Update Location', 'invoice-management-system' ),
+            'add_new_item'      => __( 'Add New Location', 'invoice-management-system' ),
+            'new_item_name'     => __( 'New Location Name', 'invoice-management-system' ),
+            'menu_name'         => __( 'Locations', 'invoice-management-system' ),
         ];
         $args_location = [
             'labels'            => $labels_location,
-            'hierarchical'      => false,
+            'hierarchical'      => true,
             'public'            => true,
             'show_ui'           => true,
-            'show_in_nav_menus' => true,
             'show_admin_column' => true,
-            'update_count_callback' => '_update_post_term_count',
+            'show_in_nav_menus' => true,
             'rewrite'           => [ 'slug' => 'location' ],
         ];
         register_taxonomy( 'location', [ 'invoice' ], $args_location );
