@@ -39,6 +39,8 @@ function ims_run() {
   \IMS\Metaboxes::instance()->init();
   // n8n integration
   \IMS\N8n::instance()->init();
+  // Helpers
+  \IMS\Helpers::instance()->init();
   
   if ( is_admin() ) {
     // \IMS\Admin::instance()->init();
