@@ -1,5 +1,3 @@
-<!-- # Main plugin bootstrap file -->
-
 <?php
 /**
  * Plugin Name:     Invoice Management System
@@ -24,6 +22,7 @@ define( 'IMS_VERSION', '1.0.0' );
 require_once IMS_PATH . 'includes/class-ims-cpt.php';
 require_once IMS_PATH . 'includes/class-ims-taxonomies.php';
 require_once IMS_PATH . 'includes/class-ims-metaboxes.php';
+require_once IMS_PATH . 'includes/class-ims-n8n.php';
 require_once IMS_PATH . 'includes/class-ims-helpers.php';
 require_once IMS_PATH . 'admin/class-ims-admin.php';
 require_once IMS_PATH . 'public/class-ims-public.php';
@@ -38,6 +37,8 @@ function ims_run() {
   \IMS\Taxonomies::instance()->register();
   // Metaboxes
   \IMS\Metaboxes::instance()->init();
+  // n8n integration
+  \IMS\N8n::instance()->init();
   
   if ( is_admin() ) {
     // \IMS\Admin::instance()->init();

@@ -162,6 +162,7 @@ class Metaboxes {
         // Ensure file exists or is uploaded
         $existing_file = get_post_meta( $post_id, '_invoice_file_id', true );
         $new_file      = ! empty( $_FILES['_invoice_file']['name'] );
+        
         if ( ! $existing_file && ! $new_file ) {
             wp_die( __( 'Invoice file upload is required.', 'invoice-management-system' ) );
         }
