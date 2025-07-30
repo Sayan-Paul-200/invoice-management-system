@@ -21,6 +21,12 @@ class Metaboxes {
         add_action( 'save_post_invoice',   [ $this, 'save_metaboxes' ], 10, 2 );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'wp_ajax_toggle_payment_date', [ $this, 'toggle_payment_date_callback' ] );
+        add_action( 'post_edit_form_tag', [ $this, 'add_form_enctype' ] );
+    }
+
+    public function add_form_enctype() {
+        // This will modify the <form> tag for the edit screen to allow file uploads
+        echo ' enctype="multipart/form-data"';
     }
 
     public function register_metaboxes() {
@@ -86,10 +92,10 @@ class Metaboxes {
             <input type="number" step="0.01" name="_invoice_amount" value="<?php echo esc_attr( $amount ); ?>" />
         </p>
         <p>
-            <label><?php _e( 'Upload Invoice:', 'invoice-management-system' ); ?></label><br>
-            <input type="file" name="_invoice_file" accept="application/pdf,image/jpeg" <?php echo empty( $file_id ) ? 'required' : ''; ?>  />
+            <input type="file" name="_invoice_file" accept="application/pdf,image/jpeg" />
             <?php if ( $file_id ) : ?>
-                <br><a href="<?php echo esc_url( wp_get_attachment_url( $file_id ) ); ?>" target="_blank"><?php _e( 'View Uploaded File', 'invoice-management-system' ); ?></a>
+                <p><em><?php _e( 'A file has already been uploaded. Uploading a new one will replace it.', 'invoice-management-system' ); ?></em></p>
+                <p><a href="<?php echo esc_url( wp_get_attachment_url( $file_id ) ); ?>" target="_blank"><?php _e( 'View Current File', 'invoice-management-system' ); ?></a></p>
             <?php endif; ?>
         </p>
         <?php
@@ -138,6 +144,21 @@ class Metaboxes {
     }
 
     public function save_metaboxes( $post_id, $post ) {
+        // Skip autosave, revisions, AJAX, etc.
+        if (
+            defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ||
+            defined( 'DOING_AJAX' ) && DOING_AJAX ||
+            wp_is_post_revision( $post_id ) ||
+            wp_is_post_autosave( $post_id )
+        ) {
+            return;
+        }
+
+        // Only run on 'publish' or 'draft' actions from UI
+        if ( $post->post_type !== 'invoice' || ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
+        }
+        
         // Verify nonces
         if ( ! isset( $_POST['ims_invoice_details_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_details_nonce'], 'ims_invoice_details_nonce' ) ) {
             return;
