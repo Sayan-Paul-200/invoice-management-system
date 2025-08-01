@@ -14,16 +14,45 @@ class N8n {
     }
 
     public function init() {
-        // Run *after* metaboxes save (priority 20 > 10)
-        add_action( 'save_post_invoice', [ $this, 'trigger_webhook' ], 20, 2 );
+        // After meta save (priority 20 > metabox priority 10)
+        add_action( 'save_post_invoice', [ $this, 'maybe_trigger_webhook' ], 20, 2 );
     }
 
-    public function trigger_webhook( $post_ID, $post ) {
-        // Only on publish
+    /**
+     * On every invoice save, decide whether it's the first publish or an update.
+     */
+    public function maybe_trigger_webhook( $post_ID, $post ) {
+        // Only for published invoices
         if ( $post->post_status !== 'publish' ) {
             return;
         }
-        
+
+        // Check our custom flag
+        $has_been_published = get_post_meta( $post_ID, '_ims_has_been_published', true );
+
+        if ( ! $has_been_published ) {
+            // First-time publish
+            $this->send_webhook(
+                $post_ID,
+                $post,
+                'https://n8n.srv917960.hstgr.cloud/webhook-test/2acc3471-0fdd-45d6-b5ba-68971f99fe99'
+            );
+            // Mark it so we don’t treat subsequent saves as first-publish
+            update_post_meta( $post_ID, '_ims_has_been_published', '1' );
+        } else {
+            // Subsequent updates
+            $this->send_webhook(
+                $post_ID,
+                $post,
+                'https://n8n.srv917960.hstgr.cloud/webhook-test/f40d816c-014f-4b8c-9fbb-3543a436bebb'
+            );
+        }
+    }
+
+    /**
+     * Common routine to gather all invoice data and fire the webhook.
+     */
+    private function send_webhook( $post_ID, $post, $url_base ) {
         // Gather meta
         $meta = [
             'invoice_date'    => get_post_meta( $post_ID, '_invoice_date', true ),
@@ -40,7 +69,7 @@ class N8n {
         $projects  = wp_get_post_terms( $post_ID, 'project',  [ 'fields' => 'names' ] );
         $locations = wp_get_post_terms( $post_ID, 'location', [ 'fields' => 'names' ] );
 
-        // Build query args (serialize arrays to CSV)
+        // Build args, flatten arrays into CSV
         $args = [
             'title'           => $post->post_title,
             'projects'        => implode( ',', $projects ),
@@ -52,14 +81,12 @@ class N8n {
             'status'          => $meta['status'],
             'payment_date'    => $meta['payment_date'],
             'to'              => $meta['to'],
-            'cc'              => implode( ', ', (array) $meta['cc'] ),
+            'cc'              => implode( ',', (array) $meta['cc'] ),
         ];
 
-        // Fire the GET request
-        $url = add_query_arg( $args,
-            'https://n8n.srv917960.hstgr.cloud/webhook-test/2acc3471-0fdd-45d6-b5ba-68971f99fe99'
-        );
-
-        wp_remote_get( esc_url_raw( $url ), [ 'timeout' => 2 ] );
+        $final_url = add_query_arg( $args, $url_base );
+        wp_remote_get( esc_url_raw( $final_url ), [ 'timeout' => 2 ] );
     }
 }
+
+N8n::instance()->init();
