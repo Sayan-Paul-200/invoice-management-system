@@ -58,7 +58,7 @@ class N8n {
             'invoice_date'    => get_post_meta( $post_ID, '_invoice_date', true ),
             'submission_date' => get_post_meta( $post_ID, '_submission_date', true ),
             'amount'          => get_post_meta( $post_ID, '_invoice_amount', true ),
-            'file_id'         => get_post_meta( $post_ID, '_invoice_file_id', true ),
+            'file_url'        => get_post_meta( $post_ID, '_invoice_file_url', true ),
             'status'          => get_post_meta( $post_ID, '_invoice_status', true ) ?: 'pending',
             'payment_date'    => get_post_meta( $post_ID, '_payment_date', true ),
             'to'              => get_post_meta( $post_ID, '_to_email', true ),
@@ -77,11 +77,11 @@ class N8n {
             'invoice_date'    => $meta['invoice_date'],
             'submission_date' => $meta['submission_date'],
             'amount'          => $meta['amount'],
-            'file_id'         => $meta['file_id'],
+            'file_url'        => $meta['file_url'],
             'status'          => $meta['status'],
             'payment_date'    => $meta['payment_date'],
             'to'              => $meta['to'],
-            'cc'              => implode( ',', (array) $meta['cc'] ),
+            'cc'              => implode( ', ', (array) $meta['cc'] ),
         ];
 
         $final_url = add_query_arg( $args, $url_base );

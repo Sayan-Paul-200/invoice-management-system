@@ -1,0 +1,23 @@
+/* Invoices status filter colors */
+.subsubsub a[href*="meta_value=pending"] {
+  color: #e57373; /* light red */
+}
+
+.subsubsub a[href*="meta_value=paid"] {
+  color: #81c784; /* light green */
+}
+
+.subsubsub a[href*="meta_value=cancel"] {
+  color: #64b5f6; /* light sky blue */
+}
+
+/* Optional: on hover, darken slightly */
+.subsubsub a[href*="meta_value=pending"]:hover {
+  color: #ef5350;
+}
+.subsubsub a[href*="meta_value=paid"]:hover {
+  color: #66bb6a;
+}
+.subsubsub a[href*="meta_value=cancel"]:hover {
+  color: #42a5f5;
+}

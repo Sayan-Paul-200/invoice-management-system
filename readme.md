@@ -11,6 +11,7 @@ invoice-management-system/
 │   ├── class-ims-taxonomies.php         # Registers custom taxonomies
 │   ├── class-ims-metaboxes.php          # Registers metaboxes & save routines
 │   └── class-ims-helpers.php            # Helper functions (e.g. sanitization)
+│   └── class-ims-n8n.php                # integrates with n8n (e.g. publish, edit)
 ├── admin/                               # Admin‑only controllers & assets
 │   ├── class-ims-admin.php              # Hooks into admin menus, enqueue scripts/styles
 │   ├── css/

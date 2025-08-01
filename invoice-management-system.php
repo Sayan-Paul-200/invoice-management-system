@@ -28,7 +28,26 @@ require_once IMS_PATH . 'admin/class-ims-admin.php';
 require_once IMS_PATH . 'public/class-ims-public.php';
 
 /**
- * Kick things off
+ * Runs on plugin activation: register CPT & taxonomies, then flush rewrite rules.
+ */
+function ims_activate() {
+    // Make sure CPT and taxonomies are registered before flushing
+    \IMS\CPT::instance()->register();
+    \IMS\Taxonomies::instance()->register();
+    flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, 'ims_activate' );
+
+/**
+ * Runs on plugin deactivation: flush rewrite rules to remove CPT rules.
+ */
+function ims_deactivate() {
+    flush_rewrite_rules();
+}
+register_deactivation_hook( __FILE__, 'ims_deactivate' );
+
+/**
+ * Bootstrap the plugin.
  */
 function ims_run() {
   // CPT
@@ -43,7 +62,7 @@ function ims_run() {
   \IMS\Helpers::instance()->init();
   
   if ( is_admin() ) {
-    // \IMS\Admin::instance()->init();
+    \IMS\Admin::instance()->init();
   } else {
     // \IMS\Public_Display::instance()->init();
   }

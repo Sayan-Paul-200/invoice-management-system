@@ -193,6 +193,12 @@ class Metaboxes {
             $attach_id = media_handle_upload( '_invoice_file', $post_id );
             if ( ! is_wp_error( $attach_id ) ) {
                 update_post_meta( $post_id, '_invoice_file_id', $attach_id );
+
+                // grab the URL and save it in its own meta
+                $file_url = wp_get_attachment_url( $attach_id );
+                if ( $file_url ) {
+                    update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $file_url ) );
+                }
             }
         }
 
