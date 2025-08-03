@@ -35,7 +35,7 @@ class N8n {
             $this->send_webhook(
                 $post_ID,
                 $post,
-                'https://n8n.srv917960.hstgr.cloud/webhook-test/2acc3471-0fdd-45d6-b5ba-68971f99fe99'
+                'https://n8n.srv917960.hstgr.cloud/webhook/2acc3471-0fdd-45d6-b5ba-68971f99fe99'
             );
             // Mark it so we don’t treat subsequent saves as first-publish
             update_post_meta( $post_ID, '_ims_has_been_published', '1' );
@@ -44,7 +44,7 @@ class N8n {
             $this->send_webhook(
                 $post_ID,
                 $post,
-                'https://n8n.srv917960.hstgr.cloud/webhook-test/f40d816c-014f-4b8c-9fbb-3543a436bebb'
+                'https://n8n.srv917960.hstgr.cloud/webhook/f40d816c-014f-4b8c-9fbb-3543a436bebb'
             );
         }
     }

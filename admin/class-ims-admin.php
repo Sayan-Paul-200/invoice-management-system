@@ -113,49 +113,35 @@ class Admin {
         }
     }
 
-    /**
-     * Add links to filter by invoice status in the subsubsub section.
-     *
-     * @param array $views Existing view links
-     * @return array Modified view links
-     */
     public function add_status_views( $views ) {
         $base_url = admin_url( 'edit.php?post_type=invoice' );
         $statuses = [
-            'all'     => __( 'All', 'invoice-management-system' ),
             'pending' => __( 'Pending', 'invoice-management-system' ),
             'paid'    => __( 'Paid', 'invoice-management-system' ),
             'cancel'  => __( 'Cancel', 'invoice-management-system' ),
         ];
 
-        // Count items per status
+        // Count items for each status
         $counts = [];
         foreach ( $statuses as $key => $label ) {
-            if ( $key === 'all' ) {
-                $counts[$key] = wp_count_posts( 'invoice' )->publish;
-            } else {
-                $q = new \WP_Query([
-                    'post_type'      => 'invoice',
-                    'post_status'    => 'publish',
-                    'meta_key'       => '_invoice_status',
-                    'meta_value'     => $key,
-                    'fields'         => 'ids',
-                    'posts_per_page' => 1,
-                ]);
-                $counts[$key] = $q->found_posts;
-            }
+            $q = new \WP_Query([
+                'post_type'      => 'invoice',
+                'post_status'    => 'publish',
+                'meta_key'       => '_invoice_status',
+                'meta_value'     => $key,
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+            ]);
+            $counts[ $key ] = $q->found_posts;
         }
 
-        $new_views = [];
+        // Build custom filter links
+        $custom = [];
         foreach ( $statuses as $key => $label ) {
-            $count = isset( $counts[$key] ) ? $counts[$key] : 0;
-            $url = $base_url;
-            if ( $key !== 'all' ) {
-                $url = add_query_arg( ['meta_key' => '_invoice_status', 'meta_value' => $key], $url );
-            }
-            $class = ( isset( $_GET['meta_value'] ) && $_GET['meta_value'] === $key ) || ( $key === 'all' && ! isset( $_GET['meta_value'] ) )
-                ? 'current' : '';
-            $new_views[ $key ] = sprintf(
+            $count = isset( $counts[ $key ] ) ? $counts[ $key ] : 0;
+            $url   = add_query_arg( [ 'meta_key' => '_invoice_status', 'meta_value' => $key ], $base_url );
+            $class = ( isset( $_GET['meta_value'] ) && $_GET['meta_value'] === $key ) ? 'current' : '';
+            $custom[ $key ] = sprintf(
                 '<a href="%1$s" class="%2$s">%3$s <span class="count">(%4$d)</span></a>',
                 esc_url( $url ),
                 $class,
@@ -164,8 +150,19 @@ class Admin {
             );
         }
 
+        // Merge default views with custom after "All"
+        $new_views = [];
+        foreach ( $views as $key => $view ) {
+            $new_views[ $key ] = $view;
+            if ( 'all' === $key ) {
+                foreach ( $custom as $ck => $clink ) {
+                    $new_views[ $ck ] = $clink;
+                }
+            }
+        }
         return $new_views;
     }
+
 
     /**
      * Apply the invoice status filter to the main admin query.

@@ -25,6 +25,7 @@ require_once IMS_PATH . 'includes/class-ims-metaboxes.php';
 require_once IMS_PATH . 'includes/class-ims-n8n.php';
 require_once IMS_PATH . 'includes/class-ims-helpers.php';
 require_once IMS_PATH . 'admin/class-ims-admin.php';
+require_once IMS_PATH . 'admin/class-ims-dashboard.php';
 require_once IMS_PATH . 'public/class-ims-public.php';
 
 /**
@@ -63,6 +64,7 @@ function ims_run() {
   
   if ( is_admin() ) {
     \IMS\Admin::instance()->init();
+    \IMS\AdminDashboard::instance()->init();
   } else {
     // \IMS\Public_Display::instance()->init();
   }
