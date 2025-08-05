@@ -57,7 +57,7 @@ class Taxonomies {
             'show_ui'           => true,
             'show_admin_column' => true,
             'show_in_nav_menus' => true,
-            'rewrite'           => [ 'slug' => 'ac_projects' ],
+            'rewrite'           => [ 'slug' => 'ac-projects' ],
         ];
         register_taxonomy( 'project', [ 'invoice' ], $args_project );
 
@@ -82,7 +82,7 @@ class Taxonomies {
             'show_ui'           => true,
             'show_admin_column' => true,
             'show_in_nav_menus' => true,
-            'rewrite'           => [ 'slug' => 'ac_location' ],
+            'rewrite'           => [ 'slug' => 'ac-locations' ],
         ];
         register_taxonomy( 'location', [ 'invoice' ], $args_location );
     }
