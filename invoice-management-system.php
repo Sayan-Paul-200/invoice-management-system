@@ -32,9 +32,14 @@ require_once IMS_PATH . 'public/class-ims-public.php';
  * Runs on plugin activation: register CPT & taxonomies, then flush rewrite rules.
  */
 function ims_activate() {
-    // Make sure CPT and taxonomies are registered before flushing
+    // 1) Add our init hooks so that CPT & taxonomies register callbacks
     \IMS\CPT::instance()->register();
     \IMS\Taxonomies::instance()->register();
+
+    // 2) Manually fire the init action to run those registrations immediately
+    do_action( 'init' );
+
+    // 3) Now flush, so the new /invoice/ endpoints exist
     flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'ims_activate' );
@@ -46,6 +51,7 @@ function ims_deactivate() {
     flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'ims_deactivate' );
+
 
 /**
  * Bootstrap the plugin.

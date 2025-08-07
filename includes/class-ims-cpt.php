@@ -72,7 +72,7 @@ class CPT {
             'labels'                => $labels,
             'supports'              => [ 'title', 'editor' ],
             'taxonomies'            => [ /* e.g. 'invoice-status', 'invoice-client' */ ],
-            'rewrite'               => array( 'slug' => 'ac_invoices'),
+            'rewrite'               => array( 'slug' => 'ac-invoices'),
             'hierarchical'          => false,
             'public'                => true,
             'show_ui'               => true,
