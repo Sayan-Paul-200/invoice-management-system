@@ -32,7 +32,7 @@ class Helpers {
         // add_filter( 'wp_insert_post_data', [ $this, 'validate_invoice_before_save' ], 1, 2 );
 
         // 2) Post‑save cleanup: delete any invalid invoices before they stick
-        add_action( 'save_post_invoice', [ $this, 'cleanup_invalid_invoice' ], 1, 2 );
+        // add_action( 'save_post_ac_invoice', [ $this, 'cleanup_invalid_invoice' ], 1, 2 );
     }
 
     

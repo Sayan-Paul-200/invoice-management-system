@@ -15,7 +15,7 @@ class N8n {
 
     public function init() {
         // After meta save (priority 20 > metabox priority 10)
-        add_action( 'save_post_invoice', [ $this, 'maybe_trigger_webhook' ], 20, 2 );
+        add_action( 'save_post_ac_invoice', [ $this, 'maybe_trigger_webhook' ], 20, 2 );
     }
 
     /**
@@ -72,8 +72,8 @@ class N8n {
         // Build args, flatten arrays into CSV
         $args = [
             'title'           => $post->post_title,
-            'projects'        => implode( ',', $projects ),
-            'locations'       => implode( ',', $locations ),
+            // 'projects'        => implode( ',', $projects ),
+            // 'locations'       => implode( ',', $locations ),
             'invoice_date'    => $meta['invoice_date'],
             'submission_date' => $meta['submission_date'],
             'amount'          => $meta['amount'],

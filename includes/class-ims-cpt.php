@@ -88,7 +88,7 @@ class CPT {
             'capability_type'       => 'post',
         ];
 
-        register_post_type( 'invoice', $args );
+        register_post_type( 'ac_invoice', $args );
     }
 }
 

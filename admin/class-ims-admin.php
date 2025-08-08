@@ -32,11 +32,11 @@ class Admin {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 
         // Customize Invoices list table
-        add_filter( 'manage_invoice_posts_columns', [ $this, 'add_status_column' ] );
-        add_action( 'manage_invoice_posts_custom_column', [ $this, 'render_status_column' ], 10, 2 );
+        add_filter( 'manage_ac_invoice_posts_columns', [ $this, 'add_status_column' ] );
+        add_action( 'manage_ac_invoice_posts_custom_column', [ $this, 'render_status_column' ], 10, 2 );
 
         // Add status filters below the page title
-        add_filter( 'views_edit-invoice', [ $this, 'add_status_views' ] );
+        add_filter( 'views_edit-ac_invoice', [ $this, 'add_status_views' ] );
         // Apply status filter to query
         add_action( 'pre_get_posts', [ $this, 'filter_by_status' ] );
     }
@@ -51,7 +51,7 @@ class Admin {
 
         // Only load on Invoice edit or list screens
         if ( 
-            $post_type === 'invoice' && in_array( $hook, [ 'edit.php', 'post.php', 'post-new.php' ], true )
+            $post_type === 'ac_invoice' && in_array( $hook, [ 'edit.php', 'post.php', 'post-new.php' ], true )
         ) {
             // Styles
             wp_enqueue_style(
@@ -125,7 +125,7 @@ class Admin {
         $counts = [];
         foreach ( $statuses as $key => $label ) {
             $q = new \WP_Query([
-                'post_type'      => 'invoice',
+                'post_type'      => 'ac_invoice',
                 'post_status'    => 'publish',
                 'meta_key'       => '_invoice_status',
                 'meta_value'     => $key,

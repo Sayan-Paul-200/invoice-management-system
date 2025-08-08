@@ -29,7 +29,7 @@ class Taxonomies {
      * Hook into WordPress
      */
     public function register() {
-        add_action( 'init', [ $this, 'register_taxonomies' ], 0 );
+        // add_action( 'init', [ $this, 'register_taxonomies' ], 0 );
     }
 
     /**
@@ -59,7 +59,7 @@ class Taxonomies {
             'show_in_nav_menus' => true,
             'rewrite'           => [ 'slug' => 'ac-projects' ],
         ];
-        register_taxonomy( 'project', [ 'invoice' ], $args_project );
+        register_taxonomy( 'project', [ 'ac_invoice' ], $args_project );
 
         // Location (hierarchical, category-like)
         $labels_location = [
@@ -84,7 +84,7 @@ class Taxonomies {
             'show_in_nav_menus' => true,
             'rewrite'           => [ 'slug' => 'ac-locations' ],
         ];
-        register_taxonomy( 'location', [ 'invoice' ], $args_location );
+        register_taxonomy( 'location', [ 'ac_invoice' ], $args_location );
     }
 }
 

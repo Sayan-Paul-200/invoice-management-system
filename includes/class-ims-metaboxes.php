@@ -18,7 +18,7 @@ class Metaboxes {
 
     public function init() {
         add_action( 'add_meta_boxes', [ $this, 'register_metaboxes' ] );
-        add_action( 'save_post_invoice',   [ $this, 'save_metaboxes' ], 10, 2 );
+        add_action( 'save_post_ac_invoice',   [ $this, 'save_metaboxes' ], 10, 2 );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'wp_ajax_toggle_payment_date', [ $this, 'toggle_payment_date_callback' ] );
         add_action( 'post_edit_form_tag', [ $this, 'add_form_enctype' ] );
@@ -34,7 +34,7 @@ class Metaboxes {
             'ims_invoice_details',
             __( 'Invoice Details', 'invoice-management-system' ),
             [ $this, 'render_invoice_details' ],
-            'invoice',
+            'ac_invoice',
             'normal',
             'high'
         );
@@ -43,7 +43,7 @@ class Metaboxes {
             'ims_invoice_status',
             __( 'Invoice Status', 'invoice-management-system' ),
             [ $this, 'render_invoice_status' ],
-            'invoice',
+            'ac_invoice',
             'normal',
             'high'
         );
@@ -52,16 +52,25 @@ class Metaboxes {
             'ims_email_receivers',
             __( 'Email Receivers', 'invoice-management-system' ),
             [ $this, 'render_email_receivers' ],
-            'invoice',
+            'ac_invoice',
             'normal',
             'high'
+        );
+
+        add_meta_box(
+            'ims_proj_loc',
+            __( 'Projects & Locations', 'invoice-management-system' ),
+            [ $this, 'render_proj_loc_metabox' ],
+            'ac_invoice',
+            'normal',      // sidebar or normal
+            'default'      // high, default, low
         );
     }
 
     public function enqueue_assets( $hook ) {
         global $post;
         if ( $hook === 'post-new.php' || $hook === 'post.php' ) {
-            if ( isset( $post->post_type ) && $post->post_type === 'invoice' ) {
+            if ( isset( $post->post_type ) && $post->post_type === 'ac_invoice' ) {
                 // jQuery UI datepicker
                 // wp_enqueue_script( 'jquery-ui-datepicker' );
                 // wp_enqueue_style( 'jquery-ui-css', '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' );
@@ -143,6 +152,45 @@ class Metaboxes {
         <?php
     }
 
+    public function render_proj_loc_metabox( $post ) {
+        wp_nonce_field( 'ims_proj_loc_nonce', 'ims_proj_loc_nonce' );
+
+        // Get saved values (or empty)
+        $project  = get_post_meta( $post->ID, '_ims_project', true );
+        $location = get_post_meta( $post->ID, '_ims_location', true );
+
+        // Define your options
+        $projects = [ 'Bihar','Delhi','Goa','Gujarat','Haryana','Jharkhand','Madhya Pradesh','Odisha','Port Blair','Rajasthan','Sikkim','Uttar Pradesh','West Bengal' ];
+        $locations = [ 'NFS','GAIL','BGCL','STP','Bharat Net','NFS AMC' ];
+
+        // Project select
+        echo '<p><label>' . esc_html__( 'Project:', 'invoice-management-system' ) . '</label><br>';
+        echo '<select name="_ims_project" style="width:100%;">';
+        echo '<option value="">' . esc_html__( '-- Select Project --', 'invoice-management-system' ) . '</option>';
+        foreach ( $projects as $opt ) {
+            printf(
+                '<option value="%1$s"%2$s>%1$s</option>',
+                esc_attr( $opt ),
+                selected( $project, $opt, false )
+            );
+        }
+        echo '</select></p>';
+
+        // Location select
+        echo '<p><label>' . esc_html__( 'Location:', 'invoice-management-system' ) . '</label><br>';
+        echo '<select name="_ims_location" style="width:100%;">';
+        echo '<option value="">' . esc_html__( '-- Select Location --', 'invoice-management-system' ) . '</option>';
+        foreach ( $locations as $opt ) {
+            printf(
+                '<option value="%1$s"%2$s>%1$s</option>',
+                esc_attr( $opt ),
+                selected( $location, $opt, false )
+            );
+        }
+        echo '</select></p>';
+    }
+
+
     public function save_metaboxes( $post_id, $post ) {
         // Skip autosave, revisions, AJAX, etc.
         if (
@@ -155,7 +203,7 @@ class Metaboxes {
         }
 
         // Only run on 'publish' or 'draft' actions from UI
-        if ( $post->post_type !== 'invoice' || ! current_user_can( 'edit_post', $post_id ) ) {
+        if ( $post->post_type !== 'ac_invoice' || ! current_user_can( 'edit_post', $post_id ) ) {
             return;
         }
         
@@ -217,6 +265,14 @@ class Metaboxes {
         $raw_cc = isset($_POST['_cc_emails']) ? (array)$_POST['_cc_emails'] : [];
         $cc_emails = array_filter(array_map('sanitize_email', $raw_cc));
         update_post_meta($post_id, '_cc_emails', $cc_emails);
+
+        // Projects & Locations
+        if ( isset( $_POST['ims_proj_loc_nonce'] ) && wp_verify_nonce( $_POST['ims_proj_loc_nonce'], 'ims_proj_loc_nonce' ) ) {
+            $proj = sanitize_text_field( $_POST['_ims_project'] );
+            $loc  = sanitize_text_field( $_POST['_ims_location'] );
+            update_post_meta( $post_id, '_ims_project',  $proj );
+            update_post_meta( $post_id, '_ims_location', $loc );
+        }
     }
 
     public function toggle_payment_date_callback() {

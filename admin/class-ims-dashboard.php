@@ -98,7 +98,7 @@ class AdminDashboard {
 
         foreach ( $statuses as $status ) {
             $q = new \WP_Query([
-                'post_type'      => 'invoice',
+                'post_type'      => 'ac_invoice',
                 'post_status'    => 'publish',
                 'meta_key'       => '_invoice_status',
                 'meta_value'     => $status,
@@ -128,7 +128,7 @@ class AdminDashboard {
                 FROM {$wpdb->postmeta} pm
                 INNER JOIN {$wpdb->posts} p ON p.ID=pm.post_id
                 WHERE pm.meta_key=%s
-                AND p.post_type='invoice'
+                AND p.post_type='ac_invoice'
                 AND p.post_status='publish'
             ", '_invoice_amount' ) );
             // But filter by status:
@@ -141,7 +141,7 @@ class AdminDashboard {
                     WHERE amount.meta_key=%s
                     AND stat.meta_key=%s
                     AND stat.meta_value=%s
-                    AND p.post_type='invoice'
+                    AND p.post_type='ac_invoice'
                     AND p.post_status='publish'
                 ", '_invoice_amount', '_invoice_status', $status ) );
             }
@@ -168,7 +168,7 @@ class AdminDashboard {
         JOIN {$wpdb->posts} p ON p.ID=date.post_id
         WHERE date.meta_key='_invoice_date'
             AND amount.meta_key='_invoice_amount'
-            AND p.post_type='invoice'
+            AND p.post_type='ac_invoice'
             AND p.post_status='publish'
         GROUP BY ym
         ORDER BY ym ASC
@@ -205,7 +205,7 @@ class AdminDashboard {
             FROM {$wpdb->posts} p
             JOIN {$wpdb->postmeta} d ON d.post_id=p.ID AND d.meta_key='_invoice_date' AND DATE_FORMAT(d.meta_value,'%%Y-%%m')=%s
             JOIN {$wpdb->postmeta} s ON s.post_id=p.ID AND s.meta_key='_invoice_status' AND s.meta_value=%s
-            WHERE p.post_type='invoice' AND p.post_status='publish'
+            WHERE p.post_type='ac_invoice' AND p.post_status='publish'
             ", $m, $status ) );
             $counts[] = (int) $cnt;
         }
@@ -250,7 +250,7 @@ class AdminDashboard {
         $counts = [];
         foreach ( $terms as $term ) {
             $q = new \WP_Query([
-            'post_type'      => 'invoice',
+            'post_type'      => 'ac_invoice',
             'post_status'    => 'publish',
             'tax_query'      => [[
                 'taxonomy' => $tax,
