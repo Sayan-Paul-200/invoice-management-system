@@ -114,7 +114,7 @@ class Admin {
     }
 
     public function add_status_views( $views ) {
-        $base_url = admin_url( 'edit.php?post_type=invoice' );
+        $base_url = admin_url( 'edit.php?post_type=ac_invoice' );
         $statuses = [
             'pending' => __( 'Pending', 'invoice-management-system' ),
             'paid'    => __( 'Paid', 'invoice-management-system' ),
@@ -174,7 +174,7 @@ class Admin {
             return;
         }
         if ( isset( $_GET['post_type'], $_GET['meta_key'], $_GET['meta_value'] )
-            && $_GET['post_type'] === 'invoice'
+            && $_GET['post_type'] === 'ac_invoice'
             && $_GET['meta_key'] === '_invoice_status'
         ) {
             $query->set( 'meta_key',   sanitize_text_field( wp_unslash( $_GET['meta_key'] ) ) );

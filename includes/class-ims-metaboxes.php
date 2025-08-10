@@ -25,9 +25,12 @@ class Metaboxes {
     }
 
     public function add_form_enctype() {
-        // This will modify the <form> tag for the edit screen to allow file uploads
-        echo ' enctype="multipart/form-data"';
+        $screen = get_current_screen();
+        if ( $screen && isset( $screen->post_type ) && $screen->post_type === 'ac_invoice' ) {
+            echo ' enctype="multipart/form-data"';
+        }
     }
+
 
     public function register_metaboxes() {
         add_meta_box(
@@ -160,8 +163,8 @@ class Metaboxes {
         $location = get_post_meta( $post->ID, '_ims_location', true );
 
         // Define your options
-        $projects = [ 'Bihar','Delhi','Goa','Gujarat','Haryana','Jharkhand','Madhya Pradesh','Odisha','Port Blair','Rajasthan','Sikkim','Uttar Pradesh','West Bengal' ];
-        $locations = [ 'NFS','GAIL','BGCL','STP','Bharat Net','NFS AMC' ];
+        $projects = [ 'NFS','GAIL','BGCL','STP','Bharat Net','NFS AMC' ];
+        $locations = [ 'Bihar','Delhi','Goa','Gujarat','Haryana','Jharkhand','Madhya Pradesh','Odisha','Port Blair','Rajasthan','Sikkim','Uttar Pradesh','West Bengal' ];
 
         // Project select
         echo '<p><label>' . esc_html__( 'Project:', 'invoice-management-system' ) . '</label><br>';
@@ -194,86 +197,131 @@ class Metaboxes {
     public function save_metaboxes( $post_id, $post ) {
         // Skip autosave, revisions, AJAX, etc.
         if (
-            defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ||
-            defined( 'DOING_AJAX' ) && DOING_AJAX ||
+            ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
+            ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ||
             wp_is_post_revision( $post_id ) ||
             wp_is_post_autosave( $post_id )
         ) {
             return;
         }
 
-        // Only run on 'publish' or 'draft' actions from UI
+        // Only run for our CPT and if user can edit
         if ( $post->post_type !== 'ac_invoice' || ! current_user_can( 'edit_post', $post_id ) ) {
             return;
         }
-        
-        // Verify nonces
-        if ( ! isset( $_POST['ims_invoice_details_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_details_nonce'], 'ims_invoice_details_nonce' ) ) {
+
+        // Verify required nonces (these are output in render_* metaboxes)
+        if ( ! isset( $_POST['ims_invoice_details_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ims_invoice_details_nonce'] ), 'ims_invoice_details_nonce' ) ) {
+            return;
+        }
+        if ( ! isset( $_POST['ims_invoice_status_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ims_invoice_status_nonce'] ), 'ims_invoice_status_nonce' ) ) {
+            return;
+        }
+        if ( ! isset( $_POST['ims_email_receivers_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ims_email_receivers_nonce'] ), 'ims_email_receivers_nonce' ) ) {
             return;
         }
 
-        if ( ! isset( $_POST['ims_invoice_status_nonce'] ) || ! wp_verify_nonce( $_POST['ims_invoice_status_nonce'], 'ims_invoice_status_nonce' ) ) {
-            return;
+        // Safely pull POST values (unslash then sanitize)
+        $invoice_date    = isset( $_POST['_invoice_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_invoice_date'] ) ) : '';
+        $submission_date = isset( $_POST['_submission_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_submission_date'] ) ) : '';
+        $amount_raw      = isset( $_POST['_invoice_amount'] ) ? wp_unslash( $_POST['_invoice_amount'] ) : '';
+        $amount          = $amount_raw === '' ? 0.0 : floatval( $amount_raw );
+
+        // Validate dates (if provided)
+        if ( $invoice_date && $submission_date ) {
+            $inv_ts = strtotime( $invoice_date );
+            $sub_ts = strtotime( $submission_date );
+            if ( $inv_ts === false || $sub_ts === false || $inv_ts >= $sub_ts ) {
+                wp_die( esc_html__( 'Invoice Date must be before Submission Date.', 'invoice-management-system' ) );
+            }
         }
 
-        if ( ! isset( $_POST['ims_email_receivers_nonce'] ) || ! wp_verify_nonce( $_POST['ims_email_receivers_nonce'], 'ims_email_receivers_nonce' ) ) {
-            return;
-        }
+        // File upload logic
+        $new_file = isset( $_FILES['_invoice_file'] ) && ! empty( $_FILES['_invoice_file']['name'] );
 
-        // Sanitize and validate
-        $invoice_date    = sanitize_text_field( $_POST['_invoice_date'] );
-        $submission_date = sanitize_text_field( $_POST['_submission_date'] );
-
-        // Ensure file exists or is uploaded
-        $new_file      = ! empty( $_FILES['_invoice_file']['name'] );
-
-        // Update meta values
-        update_post_meta( $post_id, '_invoice_date', $invoice_date );
-        update_post_meta( $post_id, '_submission_date', $submission_date );
-        update_post_meta( $post_id, '_invoice_amount', floatval( $_POST['_invoice_amount'] ) );
-
-        // Handle file upload
         if ( $new_file ) {
+            // allowed mimes
+            $allowed = [ 'application/pdf', 'image/jpeg' ];
+
+            // Basic filetype check
+            $file_type = wp_check_filetype_and_ext( $_FILES['_invoice_file']['tmp_name'], $_FILES['_invoice_file']['name'] );
+            if ( empty( $file_type['type'] ) || ! in_array( $file_type['type'], $allowed, true ) ) {
+                wp_die( esc_html__( 'Only PDF or JPEG files are allowed.', 'invoice-management-system' ) );
+            }
+
             require_once ABSPATH . 'wp-admin/includes/file.php';
             require_once ABSPATH . 'wp-admin/includes/media.php';
             require_once ABSPATH . 'wp-admin/includes/image.php';
 
             $attach_id = media_handle_upload( '_invoice_file', $post_id );
-            if ( ! is_wp_error( $attach_id ) ) {
-                update_post_meta( $post_id, '_invoice_file_id', $attach_id );
+            if ( is_wp_error( $attach_id ) ) {
+                wp_die( esc_html( $attach_id->get_error_message() ) );
+            }
+            update_post_meta( $post_id, '_invoice_file_id', $attach_id );
 
-                // grab the URL and save it in its own meta
-                $file_url = wp_get_attachment_url( $attach_id );
-                if ( $file_url ) {
-                    update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $file_url ) );
+            // store URL too
+            $file_url = wp_get_attachment_url( $attach_id );
+            if ( $file_url ) {
+                update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $file_url ) );
+            }
+        } else {
+            // If no new upload but there is an existing attachment ID, ensure URL meta exists
+            $existing_file_id = get_post_meta( $post_id, '_invoice_file_id', true );
+            if ( $existing_file_id && ! get_post_meta( $post_id, '_invoice_file_url', true ) ) {
+                $existing_url = wp_get_attachment_url( $existing_file_id );
+                if ( $existing_url ) {
+                    update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $existing_url ) );
                 }
             }
         }
 
-        // Invoice Status
-        $status = sanitize_text_field( $_POST['_invoice_status'] );
+        // Save dates and amount (only when present)
+        if ( $invoice_date !== '' ) {
+            update_post_meta( $post_id, '_invoice_date', $invoice_date );
+        }
+        if ( $submission_date !== '' ) {
+            update_post_meta( $post_id, '_submission_date', $submission_date );
+        }
+        update_post_meta( $post_id, '_invoice_amount', $amount );
+
+        // Validate & save invoice status (allow only known values)
+        $allowed_status = [ 'pending', 'paid', 'cancel' ];
+        $status_raw = isset( $_POST['_invoice_status'] ) ? sanitize_text_field( wp_unslash( $_POST['_invoice_status'] ) ) : 'pending';
+        $status = in_array( $status_raw, $allowed_status, true ) ? $status_raw : 'pending';
         update_post_meta( $post_id, '_invoice_status', $status );
 
+        // Payment date
         if ( $status === 'paid' && ! empty( $_POST['_payment_date'] ) ) {
-            update_post_meta( $post_id, '_payment_date', sanitize_text_field( $_POST['_payment_date'] ) );
+            $payment_date = sanitize_text_field( wp_unslash( $_POST['_payment_date'] ) );
+            update_post_meta( $post_id, '_payment_date', $payment_date );
         } else {
             delete_post_meta( $post_id, '_payment_date' );
         }
 
         // Email Receivers
-        update_post_meta( $post_id, '_to_email', sanitize_email( $_POST['_to_email'] ) );
-        $raw_cc = isset($_POST['_cc_emails']) ? (array)$_POST['_cc_emails'] : [];
-        $cc_emails = array_filter(array_map('sanitize_email', $raw_cc));
-        update_post_meta($post_id, '_cc_emails', $cc_emails);
+        $to_email = isset( $_POST['_to_email'] ) ? sanitize_email( wp_unslash( $_POST['_to_email'] ) ) : '';
+        update_post_meta( $post_id, '_to_email', $to_email );
 
-        // Projects & Locations
-        if ( isset( $_POST['ims_proj_loc_nonce'] ) && wp_verify_nonce( $_POST['ims_proj_loc_nonce'], 'ims_proj_loc_nonce' ) ) {
-            $proj = sanitize_text_field( $_POST['_ims_project'] );
-            $loc  = sanitize_text_field( $_POST['_ims_location'] );
+        $raw_cc = isset( $_POST['_cc_emails'] ) ? (array) wp_unslash( $_POST['_cc_emails'] ) : [];
+        $cc_emails = array_filter( array_map( 'sanitize_email', $raw_cc ) );
+        update_post_meta( $post_id, '_cc_emails', $cc_emails );
+
+        // Projects & Locations — validate against allowed lists
+        if ( isset( $_POST['ims_proj_loc_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['ims_proj_loc_nonce'] ), 'ims_proj_loc_nonce' ) ) {
+            $allowed_projects = [ 'NFS','GAIL','BGCL','STP','Bharat Net','NFS AMC' ];
+            $allowed_locations = [ 'Bihar','Delhi','Goa','Gujarat','Haryana','Jharkhand','Madhya Pradesh','Odisha','Port Blair','Rajasthan','Sikkim','Uttar Pradesh','West Bengal' ];
+
+            $proj_raw = isset( $_POST['_ims_project'] ) ? sanitize_text_field( wp_unslash( $_POST['_ims_project'] ) ) : '';
+            $loc_raw  = isset( $_POST['_ims_location'] ) ? sanitize_text_field( wp_unslash( $_POST['_ims_location'] ) ) : '';
+
+            $proj = in_array( $proj_raw, $allowed_projects, true ) ? $proj_raw : '';
+            $loc  = in_array( $loc_raw,  $allowed_locations, true ) ? $loc_raw : '';
+
             update_post_meta( $post_id, '_ims_project',  $proj );
             update_post_meta( $post_id, '_ims_location', $loc );
         }
     }
+
 
     public function toggle_payment_date_callback() {
         // This can be used if you want: right now JS toggles the field.
