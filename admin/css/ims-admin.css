@@ -11,6 +11,10 @@
   color: #64b5f6; /* light sky blue */
 }
 
+.subsubsub a[href*="meta_value=credit_note_issued"] {
+  color: #ffa825; /* light orange */
+}
+
 /* Optional: on hover, darken slightly */
 .subsubsub a[href*="meta_value=pending"]:hover {
   color: #ef5350;
@@ -20,4 +24,8 @@
 }
 .subsubsub a[href*="meta_value=cancel"]:hover {
   color: #42a5f5;
+}
+
+.subsubsub a[href*="meta_value=credit_note_issued"]:hover {
+  color: #ff8c00;
 }

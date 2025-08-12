@@ -102,7 +102,19 @@ class Admin {
         switch ( $column ) {
             case 'invoice_status':
                 $status = get_post_meta( $post_id, '_invoice_status', true );
-                echo $status ? esc_html( ucfirst( sanitize_text_field( $status ) ) ) : '&mdash;';
+                $labels = [
+                    'pending'            => __( 'Pending', 'invoice-management-system' ),
+                    'paid'               => __( 'Paid', 'invoice-management-system' ),
+                    'cancel'             => __( 'Cancel', 'invoice-management-system' ),
+                    'credit_note_issued' => __( 'Credit Note Issued', 'invoice-management-system' ),
+                ];
+                if ( $status && isset( $labels[ $status ] ) ) {
+                    echo esc_html( $labels[ $status ] );
+                } elseif ( $status ) {
+                    echo esc_html( ucfirst( sanitize_text_field( $status ) ) );
+                } else {
+                    echo '&mdash;';
+                }
                 break;
 
             case 'invoice_author':
@@ -116,9 +128,10 @@ class Admin {
     public function add_status_views( $views ) {
         $base_url = admin_url( 'edit.php?post_type=ac_invoice' );
         $statuses = [
-            'pending' => __( 'Pending', 'invoice-management-system' ),
-            'paid'    => __( 'Paid', 'invoice-management-system' ),
-            'cancel'  => __( 'Cancel', 'invoice-management-system' ),
+            'pending'            => __( 'Pending', 'invoice-management-system' ),
+            'paid'               => __( 'Paid', 'invoice-management-system' ),
+            'cancel'             => __( 'Cancel', 'invoice-management-system' ),
+            'credit_note_issued' => __( 'Credit Note Issued', 'invoice-management-system' ),
         ];
 
         // Count items for each status
