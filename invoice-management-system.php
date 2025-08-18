@@ -23,6 +23,8 @@ require_once IMS_PATH . 'includes/class-ims-cpt.php';
 require_once IMS_PATH . 'includes/class-ims-taxonomies.php';
 require_once IMS_PATH . 'includes/class-ims-metaboxes.php';
 require_once IMS_PATH . 'includes/class-ims-n8n.php';
+require_once IMS_PATH . 'includes/class-ims-shortcodes.php';
+require_once IMS_PATH . 'includes/class-ims-elementor-handler.php';
 require_once IMS_PATH . 'includes/class-ims-helpers.php';
 require_once IMS_PATH . 'admin/class-ims-admin.php';
 require_once IMS_PATH . 'admin/class-ims-dashboard.php';
@@ -73,6 +75,7 @@ function ims_run() {
     \IMS\AdminDashboard::instance()->init();
   } else {
     // \IMS\Public_Display::instance()->init();
+    \IMS\Shortcodes::instance()->init();
   }
   
   // Load textdomain

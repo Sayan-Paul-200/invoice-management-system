@@ -25,6 +25,34 @@ invoice-management-system/
     └── js/
         └── ims-public.js
 
+------------------------------------------------------------------------------------------------------------
+
+invoice-management-system/
+├── invoice-management-system.php
+├── uninstall.php
+├── readme.txt
+├── assets/
+│   └── logo.png
+├── languages/
+│   └── invoice-management-system.pot
+├── includes/
+│   ├── class-ims-cpt.php
+│   ├── class-ims-taxonomies.php
+│   ├── class-ims-metaboxes.php
+│   └── class-ims-helpers.php
+│   └── class-ims-n8n.php
+├── admin/
+│   ├── class-ims-admin.php
+│   ├── css/
+│   │   └── ims-admin.css
+│   └── js/
+│       └── ims-admin.js
+└── public/
+    ├── class-ims-public.php
+    ├── css/
+    │   └── ims-public.css
+    └── js/
+        └── ims-public.js
 
 ------------------------------------------------------------------------------------------------------------
 
