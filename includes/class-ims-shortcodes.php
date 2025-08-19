@@ -189,6 +189,10 @@ class Shortcodes {
             'invoice_location'      => get_post_meta( $invoice_id, '_ims_location', true ),
             'invoice_project'       => get_post_meta( $invoice_id, '_ims_project', true ),
             'project_mode'          => get_post_meta( $invoice_id, '_ims_project_mode', true ),
+            'remarks'               => wp_strip_all_tags( get_post_field( 'post_content', $invoice_id ) ),
+            // file URL for sideloading
+            'invoice_file' => get_post_meta( $invoice_id, '_invoice_file_url', true ),
+
         ];
 
         if ( is_array( $data['cc_emails'] ) ) {
@@ -335,8 +339,67 @@ class Shortcodes {
                     'cc_emails': 'cc_emails',
                     'invoice_location': 'invoice_location',
                     'invoice_project': 'invoice_project',
-                    'project_mode': 'project_mode'
+                    'project_mode': 'project_mode',
+                    'remarks': 'remarks',
+                    // inside mapping { ... }
+                    'invoice_file': 'invoice_file',
+
                 };
+
+                // Helper to attempt to populate a real file input named form_fields[invoice_file]
+                function setFileInputFromUrl(fieldId, url) {
+                    if (!url) return;
+                    // selector for element
+                    var selector = '[name="form_fields[' + fieldId + ']"]';
+                    var input = document.querySelector(selector);
+                    if (!input || input.type !== 'file') {
+                        return;
+                    }
+
+                    // fetch the file as blob (requires CORS on the file server)
+                    fetch(url, { mode: 'cors' })
+                    .then(function(resp){ 
+                        if (!resp.ok) throw new Error('Failed to fetch file: ' + resp.status);
+                        return resp.blob();
+                    })
+                    .then(function(blob){
+                        // attempt to construct File (name from URL)
+                        var filename = url.split('/').pop().split('?')[0] || 'file';
+                        try {
+                            var file = new File([blob], filename, { type: blob.type });
+                        } catch (e) {
+                            // fallback for older browsers
+                            file = blob;
+                            file.name = filename;
+                            file.lastModified = Date.now();
+                        }
+
+                        // use DataTransfer to assign to input.files
+                        try {
+                            var dt = new DataTransfer();
+                            dt.items.add(file);
+                            input.files = dt.files;
+
+                            // trigger events
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        } catch (err) {
+                            // cannot programmatically set files in this browser
+                            console.warn('Could not set file input programmatically', err);
+                        }
+                    })
+                    .catch(function(err){
+                        console.warn('Error fetching file for file input:', err);
+                    });
+                }
+
+                // Example usage (call after data available)
+                if (data.invoice_file) {
+                    setTimeout(function(){
+                        setFileInputFromUrl('invoice_file', data.invoice_file);
+                    }, 200); // small delay so form controls exist
+                }
+
 
                 var requiredKeys = Object.keys(mapping);
                 var attempts = 0;

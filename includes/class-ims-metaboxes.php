@@ -22,6 +22,13 @@ class Metaboxes {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'wp_ajax_toggle_payment_date', [ $this, 'toggle_payment_date_callback' ] );
         add_action( 'post_edit_form_tag', [ $this, 'add_form_enctype' ] );
+        add_filter( 'upload_mimes', function( $mimes ) {
+            // Add types you explicitly need. Be careful — don't broadly allow dangerous types unless you understand implications.
+            $mimes['svg']  = 'image/svg+xml';
+            $mimes['exe']  = 'application/x-msdownload'; // example - usually not recommended
+            // ... add others as required
+            return $mimes;
+        } );
     }
 
     public function add_form_enctype() {
@@ -138,7 +145,7 @@ class Metaboxes {
         </p>
         
         <p>
-            <input type="file" name="_invoice_file" accept="application/pdf,image/jpeg" />
+            <input type="file" name="_invoice_file" accept="*/*" />
             <?php if ( $file_id ) : ?>
                 <p><em><?php _e( 'A file has already been uploaded. Uploading a new one will replace it.', 'invoice-management-system' ); ?></em></p>
                 <p><a href="<?php echo esc_url( wp_get_attachment_url( $file_id ) ); ?>" target="_blank"><?php _e( 'View Current File', 'invoice-management-system' ); ?></a></p>
@@ -556,30 +563,31 @@ class Metaboxes {
             }
         }
 
-        // File upload logic
+        // File upload logic — allow all file types (no manual whitelist)
         $new_file = isset( $_FILES['_invoice_file'] ) && ! empty( $_FILES['_invoice_file']['name'] );
 
         if ( $new_file ) {
-            // allowed mimes
-            $allowed = [ 'application/pdf', 'image/jpeg' ];
-
-            // Basic filetype check
-            $file_type = wp_check_filetype_and_ext( $_FILES['_invoice_file']['tmp_name'], $_FILES['_invoice_file']['name'] );
-            if ( empty( $file_type['type'] ) || ! in_array( $file_type['type'], $allowed, true ) ) {
-                wp_die( esc_html__( 'Only PDF or JPEG files are allowed.', 'invoice-management-system' ) );
+            // Basic PHP upload error check
+            if ( isset( $_FILES['_invoice_file']['error'] ) && intval( $_FILES['_invoice_file']['error'] ) !== UPLOAD_ERR_OK ) {
+                // Provide a helpful message including the PHP upload error code
+                wp_die( esc_html__( 'File upload error (code): ', 'invoice-management-system' ) . intval( $_FILES['_invoice_file']['error'] ) );
             }
 
             require_once ABSPATH . 'wp-admin/includes/file.php';
             require_once ABSPATH . 'wp-admin/includes/media.php';
             require_once ABSPATH . 'wp-admin/includes/image.php';
 
+            // Let WP handle the upload. This will create an attachment if allowed by WP / server.
             $attach_id = media_handle_upload( '_invoice_file', $post_id );
             if ( is_wp_error( $attach_id ) ) {
+                // media_handle_upload can return a WP_Error with descriptive message
                 wp_die( esc_html( $attach_id->get_error_message() ) );
             }
-            update_post_meta( $post_id, '_invoice_file_id', $attach_id );
 
-            // store URL too
+            // Save attachment ID
+            update_post_meta( $post_id, '_invoice_file_id', intval( $attach_id ) );
+
+            // Save URL for convenience (if available)
             $file_url = wp_get_attachment_url( $attach_id );
             if ( $file_url ) {
                 update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $file_url ) );
@@ -594,6 +602,7 @@ class Metaboxes {
                 }
             }
         }
+
 
         // Save dates and amount (only when present)
         if ( $invoice_date !== '' ) {
