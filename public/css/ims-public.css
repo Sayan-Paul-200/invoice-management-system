@@ -4,8 +4,8 @@
 :root{
   --ims-bg: #f6f8fb;
   --ims-card: #ffffff;
-  --ims-accent: #1f77ff;
-  --ims-accent-dark: #1658cc;
+  --ims-accent: #E1972F;
+  --ims-accent-dark: #b37319;
   --ims-muted: #6b7280;
   --ims-border: #e6e9ef;
   --ims-radius: 10px;
@@ -66,7 +66,7 @@
 }
 
 .ims-invoices-shortcode-wrap tbody tr:hover {
-  background: rgba(31,119,255,0.03);
+  background: rgba(31, 119, 255, 0.03);
   transform: translateY(-1px);
   box-shadow: 0 2px 10px rgba(31,119,255,0.03);
 }
@@ -118,7 +118,7 @@
 
 /* Invoice title link */
 .ims-invoices-shortcode-wrap td a {
-  color: #0b3bff;
+  color: #b37319;
   text-decoration: none;
   font-weight: 600;
 }
@@ -175,7 +175,7 @@
 /* Accessibility: focus outlines */
 .ims-invoices-shortcode-wrap a:focus,
 .ims-invoices-shortcode-wrap button:focus {
-  outline: 3px solid rgba(31,119,255,0.16);
+  outline: 3px solid rgba(31, 119, 255, 0.16);
   outline-offset: 2px;
   border-radius: 8px;
 }

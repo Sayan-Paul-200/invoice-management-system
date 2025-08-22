@@ -1,3 +1,8 @@
+/* admin/css/ims-admin.css
+Styles for the Invoice metaboxes (uses Montserrat)
+*/
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+
 /* Invoices status filter colors */
 .subsubsub a[href*="meta_value=pending"] {
   color: #e57373; /* light red */
@@ -28,4 +33,171 @@
 
 .subsubsub a[href*="meta_value=credit_note_issued"]:hover {
   color: #ff8c00;
+}
+
+/* Apply only on the invoice post type edit screens */
+body.post-type-ac_invoice {
+  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Make metaboxes more card-like and compact */
+body.post-type-ac_invoice .postbox {
+  border-radius: 10px;
+  border: 1px solid #e6e9ef;
+  box-shadow: 0 6px 20px rgba(12, 20, 40, 0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  overflow: visible;
+}
+body.post-type-ac_invoice .postbox:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(12, 20, 40, 0.06);
+}
+
+/* Postbox header */
+body.post-type-ac_invoice .postbox .hndle {
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border-bottom: 1px solid #eef2f7;
+  padding: 12px 14px;
+  font-weight: 600;
+  color: #0f172a;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+/* Inside spacing */
+body.post-type-ac_invoice .postbox .inside {
+  padding: 14px;
+  background: transparent;
+}
+
+/* Standard label style */
+body.post-type-ac_invoice .postbox label {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* Inputs full width and consistent look */
+body.post-type-ac_invoice .postbox input[type="text"],
+body.post-type-ac_invoice .postbox input[type="email"],
+body.post-type-ac_invoice .postbox input[type="date"],
+body.post-type-ac_invoice .postbox input[type="number"],
+body.post-type-ac_invoice .postbox textarea,
+body.post-type-ac_invoice .postbox select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e6e9ef;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #0b1220;
+}
+
+/* Describe/help text */
+body.post-type-ac_invoice .postbox .description,
+body.post-type-ac_invoice .postbox em.description {
+  display:block;
+  margin-top:6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Range slider display (milestone / gst) */
+body.post-type-ac_invoice input[type="range"] {
+  width: calc(100% - 80px);
+  vertical-align: middle;
+  margin-right: 8px;
+}
+body.post-type-ac_invoice .ims-range-wrap {
+  display:flex;
+  align-items:center;
+}
+body.post-type-ac_invoice .ims-range-value {
+  min-width:64px;
+  text-align:left;
+  font-weight:600;
+  color:#0b1220;
+}
+
+/* File input row & preview */
+body.post-type-ac_invoice input[type="file"] {
+  padding: 6px 8px;
+}
+
+.ims-file-preview {
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.ims-file-preview img {
+  max-width:84px;
+  max-height:64px;
+  object-fit:contain;
+  border-radius:6px;
+  border:1px solid #e6e9ef;
+  background:#fff;
+}
+.ims-file-preview .ims-file-meta {
+  font-size:13px;
+  color:#0f172a;
+}
+.ims-file-preview .ims-file-meta a {
+  color:var(--wp-admin-theme-color, #0073aa);
+  text-decoration:underline;
+}
+
+/* CC repeater controls */
+#ims-cc-wrapper p {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+#ims-cc-wrapper input[type="email"] { width: calc(100% - 36px); }
+#ims-cc-wrapper .ims-remove-cc { margin-left:4px; }
+
+/* Button styles for add/remove */
+button.ims-add-cc,
+button.ims-remove-cc {
+  background: #1f77ff;
+  color: #fff !important;
+  border: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+button.ims-remove-cc { background: #ef4444; }
+
+/* Readonly numeric displays (GST, Totals, Net, Balance) visually distinct */
+.postbox input[readonly], .postbox input[disabled] {
+  background: #f8fafc;
+  border-style: dashed;
+  color: #0f172a;
+}
+
+/* Payment date wrapper: subtle border */
+#ims-payment-date-wrapper {
+  padding: 10px 12px;
+  border-left: 3px solid #10b981;
+  background: #fbfffb;
+  margin-top:10px;
+  border-radius:6px;
+}
+
+/* Align numeric fields nicely */
+.ims-col-right { text-align:right; }
+
+/* Small helper when metabox needs to be compact */
+.ims-compact-row{ display:flex; gap:12px; }
+.ims-compact-row .ims-compact-cell{ flex:1; }
+
+/* Accessibility focus */
+.postbox input:focus, .postbox select:focus, .postbox textarea:focus, .postbox button:focus {
+  outline: 3px solid rgba(31,119,255,0.12);
+  outline-offset: 2px;
 }

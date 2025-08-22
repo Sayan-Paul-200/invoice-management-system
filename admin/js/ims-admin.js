@@ -185,3 +185,125 @@
 
     });
 })(jQuery);
+
+
+
+/* admin/js/ims-admin.js
+   Lightweight UI enhancements for the Invoice metaboxes.
+   - File preview for uploaded file inputs
+   - Better balance live update when net/paid change
+   - Small improvements for range display
+*/
+
+(function($){
+  $(function(){
+    // --- File preview helper ---
+    var $fileInput = $('input[name="_invoice_file"]');
+    if ( $fileInput.length ) {
+      $fileInput.each(function(){
+        var $f = $(this);
+        // Create preview container if not present
+        if ( $f.next('.ims-file-preview').length === 0 ) {
+          $f.after('<div class="ims-file-preview" aria-hidden="false" style="display:none;"></div>');
+        }
+        var $preview = $f.next('.ims-file-preview');
+
+        // If there's already a View Current File link rendered server-side, attach it to preview
+        // We expect markup: a link to attachment (we placed it after input in PHP earlier)
+        var $anchor = $f.parent().find('a[target="_blank"]').first();
+        if ( $anchor && $anchor.length ) {
+          var href = $anchor.attr('href');
+          var text = $anchor.text() || href.split('/').pop();
+          renderPreview($preview, href, text);
+          $preview.show();
+        }
+
+        // When user selects a new file, show preview using object URL
+        $f.on('change', function(ev){
+          var file = this.files && this.files[0];
+          if ( ! file ) return;
+          var url = URL.createObjectURL(file);
+          var name = file.name || url.split('/').pop();
+          renderPreview($preview, url, name, file.type);
+          $preview.show();
+        });
+
+      });
+    }
+
+    function renderPreview($preview, url, filename, mime){
+      // Clear
+      $preview.empty();
+      mime = (mime || '').toLowerCase();
+
+      // If image show img, if pdf show small iframe/embed, else show link
+      if ( mime.indexOf('image/') === 0 || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename) ) {
+        var $img = $('<img alt="Invoice attachment preview"/>').attr('src', url);
+        var $meta = $('<div class="ims-file-meta"></div>');
+        $meta.append( $('<div/>').text(filename) );
+        $meta.append( $('<div/>').html('<a target="_blank" rel="noopener noreferrer">Open file</a>').attr('href', url) );
+        $preview.append($img).append($meta);
+        return;
+      }
+
+      if ( mime === 'application/pdf' || /\.pdf$/i.test(filename) ) {
+        // small preview: embedded pdf if same-origin or blob URL
+        var $img = $('<img alt="PDF icon" src="' + IMS_URL + 'admin/img/pdf-icon.png" onerror="this.style.display=\'none\'"/>');
+        var $meta = $('<div class="ims-file-meta"></div>');
+        $meta.append( $('<div/>').text(filename) );
+        $meta.append( $('<div/>').html('<a target="_blank" rel="noopener noreferrer">Open PDF</a>').attr('href', url) );
+        $preview.append($img).append($meta);
+        return;
+      }
+
+      // fallback: show filename + link
+      var $meta = $('<div class="ims-file-meta"></div>');
+      $meta.append( $('<div/>').text(filename) );
+      $meta.append( $('<div/>').html('<a target="_blank" rel="noopener noreferrer">Download / Open</a>').attr('href', url) );
+      $preview.append($meta);
+    }
+
+    // --- Balance live update ---
+    function updateBalance() {
+      var net = parseFloat( $('#ims_net_payable_hidden').val() || $('#ims_net_payable').val() || 0 );
+      var paid = parseFloat( $('input[name="_invoice_amount_paid"]').val() || 0 );
+      if ( isNaN(net) ) net = 0;
+      if ( isNaN(paid) ) paid = 0;
+      var bal = Math.round( (net - paid) * 100 ) / 100;
+      // update both visible and hidden
+      var formatted = ( (isNaN(bal)) ? '0.00' : bal.toFixed(2) );
+      $('#ims_balance').val( formatted );
+      $('#ims_balance_hidden').val( formatted );
+    }
+
+    // Bind to changes: amount paid input and when net hidden changes
+    $(document).on('input change', 'input[name="_invoice_amount_paid"]', updateBalance);
+
+    // If other scripts update the hidden net value, observe it
+    var netHidden = document.getElementById('ims_net_payable_hidden');
+    if ( netHidden ) {
+      var mo = new MutationObserver(function(){ updateBalance(); });
+      mo.observe(netHidden, { attributes: true, childList: true, subtree: true, characterData: true });
+    }
+
+    // run once
+    updateBalance();
+
+    // --- range styling: wrap range and value into a flex row for nicer layout ---
+    $('input[type="range"][name="_invoice_milestone"], input[type="range"][name="_invoice_gst_percent"]').each(function(){
+      var $r = $(this);
+      if ( $r.parent().hasClass('ims-range-wrap') ) return;
+      var valSpanId = $r.attr('id') ? $r.attr('id').replace(/range/i,'val') : ('ims_range_val_' + Math.floor(Math.random()*10000));
+      var $wrap = $('<div class="ims-range-wrap" />');
+      var $val = $('<div class="ims-range-value" id="'+valSpanId+'">').text( $r.val() + '%' );
+      $r.after($val);
+      $r.wrap($wrap);
+      // bind update
+      $r.on('input change', function(){
+        var v = $r.val();
+        $val.text( v + '%');
+      });
+    });
+
+  });
+})(jQuery);
