@@ -113,13 +113,16 @@ class Shortcodes {
             $output .= '<td class="ims-col-right">' . number_format_i18n( $amount_paid, 2 ) . '</td>';
             $output .= '<td class="ims-col-right">' . number_format_i18n( $balance, 2 ) . '</td>';
 
-            // Action column (show edit button only for users who can edit this post) - link points to front-end page
-            if ( current_user_can( 'edit_post', $post_id ) ) {
-                $action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
-            } else {
-                $action_html = '&mdash;';
-            }
-            $output .= '<td class="ims-col-action">' . $action_html . '</td>';
+            // if ( current_user_can( 'edit_post', $post_id ) ) {
+            //     $action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
+            // } else {
+            //     $action_html = '&mdash;';
+            // }
+
+
+            // Always show edit button (no capability check)
+			$action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
+			$output .= '<td class="ims-col-action">' . $action_html . '</td>';
 
             $output .= '<td>' . esc_html( get_the_modified_date() ) . '</td>';
 
@@ -156,9 +159,9 @@ class Shortcodes {
         }
 
         // Optional capability check: only show populate script if current user can edit the post.
-        if ( ! current_user_can( 'edit_post', $invoice_id ) ) {
-            return;
-        }
+//         if ( ! current_user_can( 'edit_post', $invoice_id ) ) {
+//             return;
+//         }
 
         // Collect meta values (sanitize for output)
         $data = [
@@ -189,6 +192,10 @@ class Shortcodes {
             'invoice_location'      => get_post_meta( $invoice_id, '_ims_location', true ),
             'invoice_project'       => get_post_meta( $invoice_id, '_ims_project', true ),
             'project_mode'          => get_post_meta( $invoice_id, '_ims_project_mode', true ),
+            'remarks'               => wp_strip_all_tags( get_post_field( 'post_content', $invoice_id ) ),
+            // file URL for sideloading
+            'invoice_file' => get_post_meta( $invoice_id, '_invoice_file_url', true ),
+
         ];
 
         if ( is_array( $data['cc_emails'] ) ) {
@@ -335,8 +342,67 @@ class Shortcodes {
                     'cc_emails': 'cc_emails',
                     'invoice_location': 'invoice_location',
                     'invoice_project': 'invoice_project',
-                    'project_mode': 'project_mode'
+                    'project_mode': 'project_mode',
+                    'remarks': 'remarks',
+                    // inside mapping { ... }
+                    'invoice_file': 'invoice_file',
+
                 };
+
+                // Helper to attempt to populate a real file input named form_fields[invoice_file]
+                function setFileInputFromUrl(fieldId, url) {
+                    if (!url) return;
+                    // selector for element
+                    var selector = '[name="form_fields[' + fieldId + ']"]';
+                    var input = document.querySelector(selector);
+                    if (!input || input.type !== 'file') {
+                        return;
+                    }
+
+                    // fetch the file as blob (requires CORS on the file server)
+                    fetch(url, { mode: 'cors' })
+                    .then(function(resp){ 
+                        if (!resp.ok) throw new Error('Failed to fetch file: ' + resp.status);
+                        return resp.blob();
+                    })
+                    .then(function(blob){
+                        // attempt to construct File (name from URL)
+                        var filename = url.split('/').pop().split('?')[0] || 'file';
+                        try {
+                            var file = new File([blob], filename, { type: blob.type });
+                        } catch (e) {
+                            // fallback for older browsers
+                            file = blob;
+                            file.name = filename;
+                            file.lastModified = Date.now();
+                        }
+
+                        // use DataTransfer to assign to input.files
+                        try {
+                            var dt = new DataTransfer();
+                            dt.items.add(file);
+                            input.files = dt.files;
+
+                            // trigger events
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        } catch (err) {
+                            // cannot programmatically set files in this browser
+                            console.warn('Could not set file input programmatically', err);
+                        }
+                    })
+                    .catch(function(err){
+                        console.warn('Error fetching file for file input:', err);
+                    });
+                }
+
+                // Example usage (call after data available)
+                if (data.invoice_file) {
+                    setTimeout(function(){
+                        setFileInputFromUrl('invoice_file', data.invoice_file);
+                    }, 200); // small delay so form controls exist
+                }
+
 
                 var requiredKeys = Object.keys(mapping);
                 var attempts = 0;
