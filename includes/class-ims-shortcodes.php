@@ -113,8 +113,6 @@ class Shortcodes {
             $output .= '<td class="ims-col-right">' . number_format_i18n( $amount_paid, 2 ) . '</td>';
             $output .= '<td class="ims-col-right">' . number_format_i18n( $balance, 2 ) . '</td>';
 
-<<<<<<< HEAD
-=======
             // if ( current_user_can( 'edit_post', $post_id ) ) {
             //     $action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
             // } else {
@@ -122,7 +120,6 @@ class Shortcodes {
             // }
 
 
->>>>>>> 879b078a156b1b8d3e6bd5c5d829c24ec4aaee40
             // Always show edit button (no capability check)
 			$action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
 			$output .= '<td class="ims-col-action">' . $action_html . '</td>';
