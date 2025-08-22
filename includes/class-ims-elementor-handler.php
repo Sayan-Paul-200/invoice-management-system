@@ -156,9 +156,9 @@ if ( ! function_exists( __NAMESPACE__ . '\\ims_update_ac_invoice_from_elementor'
             $post_id = intval( $invoice_post->ID );
 
             // Optional capability check: only allow users who can edit the post to do the update
-            if ( ! current_user_can( 'edit_post', $post_id ) ) {
-                return;
-            }
+//             if ( ! current_user_can( 'edit_post', $post_id ) ) {
+//                 return;
+//             }
 
             // Prepare to update title if provided as text (overwrite if non-empty)
             $invoice_title_field = $get_field( 'invoice_id' );

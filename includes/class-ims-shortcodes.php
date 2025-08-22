@@ -113,13 +113,9 @@ class Shortcodes {
             $output .= '<td class="ims-col-right">' . number_format_i18n( $amount_paid, 2 ) . '</td>';
             $output .= '<td class="ims-col-right">' . number_format_i18n( $balance, 2 ) . '</td>';
 
-            // Action column (show edit button only for users who can edit this post) - link points to front-end page
-            if ( current_user_can( 'edit_post', $post_id ) ) {
-                $action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
-            } else {
-                $action_html = '&mdash;';
-            }
-            $output .= '<td class="ims-col-action">' . $action_html . '</td>';
+            // Always show edit button (no capability check)
+			$action_html = '<a class="ims-edit-button" href="' . esc_url( $frontend_edit_url ) . '">' . esc_html__( 'Edit', 'invoice-management-system' ) . '</a>';
+			$output .= '<td class="ims-col-action">' . $action_html . '</td>';
 
             $output .= '<td>' . esc_html( get_the_modified_date() ) . '</td>';
 
@@ -156,9 +152,9 @@ class Shortcodes {
         }
 
         // Optional capability check: only show populate script if current user can edit the post.
-        if ( ! current_user_can( 'edit_post', $invoice_id ) ) {
-            return;
-        }
+//         if ( ! current_user_can( 'edit_post', $invoice_id ) ) {
+//             return;
+//         }
 
         // Collect meta values (sanitize for output)
         $data = [
