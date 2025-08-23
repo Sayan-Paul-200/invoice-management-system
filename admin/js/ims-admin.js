@@ -98,7 +98,7 @@
         // Names of fields to include in the deduction total
         var fields = [
             '_invoice_retention_amount',
-            '_invoice_gst_withheld',
+            // '_invoice_gst_withheld',
             '_invoice_tds_amount',
             '_invoice_gst_tds_amount',
             '_invoice_bocw_amount',

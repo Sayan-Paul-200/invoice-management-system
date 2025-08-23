@@ -386,7 +386,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\ims_update_ac_invoice_from_elementor'
             // Total deduction: sum deduction keys
             $deduction_keys = array(
                 '_invoice_retention_amount',
-                '_invoice_gst_withheld',
+                // '_invoice_gst_withheld',
                 '_invoice_tds_amount',
                 '_invoice_gst_tds_amount',
                 '_invoice_bocw_amount',

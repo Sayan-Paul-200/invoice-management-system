@@ -864,7 +864,7 @@ class Metaboxes {
         // Compute & save total deductions (server-side authoritative)
         $deduction_keys = [
             '_invoice_retention_amount',
-            '_invoice_gst_withheld',
+            // '_invoice_gst_withheld',
             '_invoice_tds_amount',
             '_invoice_gst_tds_amount',
             '_invoice_bocw_amount',
