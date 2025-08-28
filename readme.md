@@ -38,11 +38,14 @@ invoice-management-system/
 ├── includes/
 │   ├── class-ims-cpt.php
 │   ├── class-ims-taxonomies.php
+│   ├── class-ims-elementor-handler.php
+│   ├── class-ims-shortcodes.php
 │   ├── class-ims-metaboxes.php
 │   └── class-ims-helpers.php
 │   └── class-ims-n8n.php
 ├── admin/
 │   ├── class-ims-admin.php
+│   ├── class-ims-dashboard.php
 │   ├── css/
 │   │   └── ims-admin.css
 │   └── js/

@@ -18,67 +18,115 @@ define( 'IMS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'IMS_URL',  plugin_dir_url(  __FILE__ ) );
 define( 'IMS_VERSION', '1.0.0' );
 
-// Autoload or require your classes
-require_once IMS_PATH . 'includes/class-ims-cpt.php';
-require_once IMS_PATH . 'includes/class-ims-taxonomies.php';
-require_once IMS_PATH . 'includes/class-ims-metaboxes.php';
-require_once IMS_PATH . 'includes/class-ims-n8n.php';
-require_once IMS_PATH . 'includes/class-ims-shortcodes.php';
-require_once IMS_PATH . 'includes/class-ims-elementor-handler.php';
-require_once IMS_PATH . 'includes/class-ims-helpers.php';
-require_once IMS_PATH . 'admin/class-ims-admin.php';
-require_once IMS_PATH . 'admin/class-ims-dashboard.php';
-require_once IMS_PATH . 'public/class-ims-public.php';
+// --- safe includes with output capture (prevents unexpected activation output) ---
+$includes = [
+    'includes/class-ims-cpt.php',
+    'includes/class-ims-taxonomies.php',
+    'includes/class-ims-metaboxes.php',
+    'includes/class-ims-n8n.php',
+    'includes/class-ims-shortcodes.php',
+    'includes/class-ims-elementor-handler.php',
+    'includes/class-ims-helpers.php',
+];
+
+// Start buffering so that any unexpected echo/notice doesn't reach browser
+ob_start();
+
+foreach ( $includes as $rel ) {
+    $path = IMS_PATH . $rel;
+    if ( file_exists( $path ) ) {
+        include_once $path;
+    } else {
+        error_log( "IMS: missing include {$path}" );
+    }
+}
+
+// Include admin/public classes separately (optional)
+$admin_files = [
+    'admin/class-ims-admin.php',
+    'admin/class-ims-dashboard.php',
+    'public/class-ims-public.php',
+];
+
+foreach ( $admin_files as $rel ) {
+    $path = IMS_PATH . $rel;
+    if ( file_exists( $path ) ) {
+        include_once $path;
+    } else {
+        // not fatal; log missing pieces
+        error_log( "IMS: optional include missing: {$path}" );
+    }
+}
+
+$captured = ob_get_clean();
+if ( $captured !== '' ) {
+    // Log up to first 2000 chars so your debug.log contains the problem
+    error_log( 'IMS: unexpected output during include stage (truncated): ' . substr( $captured, 0, 2000 ) );
+    // OPTIONAL: you can store full buffer in file for deeper inspection (careful with huge output)
+    // file_put_contents( IMS_PATH . 'unexpected_output.log', $captured );
+}
+
 
 /**
  * Runs on plugin activation: register CPT & taxonomies, then flush rewrite rules.
  */
 function ims_activate() {
-    // 1) Add our init hooks so that CPT & taxonomies register callbacks
-    \IMS\CPT::instance()->register();
-    \IMS\Taxonomies::instance()->register();
+    ob_start();
+    // register CPT & taxonomies
+    if ( class_exists( '\IMS\CPT' ) ) {
+        \IMS\CPT::instance()->register();
+    }
+    if ( class_exists( '\IMS\Taxonomies' ) ) {
+        \IMS\Taxonomies::instance()->register();
+    }
 
-    // 2) Manually fire the init action to run those registrations immediately
     do_action( 'init' );
-
-    // 3) Now flush, so the new /invoice/ endpoints exist
     flush_rewrite_rules();
+    $buf = ob_get_clean();
+    if ( $buf !== '' ) {
+        error_log( 'IMS activation unexpected output (truncated): ' . substr( $buf, 0, 2000 ) );
+    }
 }
 register_activation_hook( __FILE__, 'ims_activate' );
 
-/**
- * Runs on plugin deactivation: flush rewrite rules to remove CPT rules.
- */
-function ims_deactivate() {
-    flush_rewrite_rules();
-}
-register_deactivation_hook( __FILE__, 'ims_deactivate' );
 
 
 /**
  * Bootstrap the plugin.
  */
 function ims_run() {
-  // CPT
-  \IMS\CPT::instance()->register();
-  // Taxonomies
-  \IMS\Taxonomies::instance()->register();
-  // Metaboxes
-  \IMS\Metaboxes::instance()->init();
-  // n8n integration
-  \IMS\N8n::instance()->init();
-  // Helpers
-  \IMS\Helpers::instance()->init();
-  
-  if ( is_admin() ) {
-    \IMS\Admin::instance()->init();
-    \IMS\AdminDashboard::instance()->init();
-  } else {
-    // \IMS\Public_Display::instance()->init();
-    \IMS\Shortcodes::instance()->init();
-  }
-  
-  // Load textdomain
-  load_plugin_textdomain( 'invoice-management-system', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    if ( class_exists( '\IMS\CPT' ) ) {
+        \IMS\CPT::instance()->register();
+    }
+    if ( class_exists( '\IMS\Taxonomies' ) ) {
+        \IMS\Taxonomies::instance()->register();
+    }
+    if ( class_exists( '\IMS\Metaboxes' ) ) {
+        \IMS\Metaboxes::instance()->init();
+    }
+    if ( class_exists( '\IMS\N8n' ) ) {
+        \IMS\N8n::instance()->init();
+    }
+    if ( class_exists( '\IMS\Helpers' ) ) {
+        \IMS\Helpers::instance()->init();
+    }
+
+    if ( is_admin() ) {
+        if ( class_exists( '\IMS\Admin' ) ) {
+            \IMS\Admin::instance()->init();
+        }
+        if ( class_exists( '\IMS\AdminDashboard' ) ) {
+            \IMS\AdminDashboard::instance()->init();
+        }
+    } else {
+        if ( class_exists( '\IMS\Shortcodes' ) ) {
+            \IMS\Shortcodes::instance()->init();
+        }
+        if ( class_exists( '\IMS\PublicDisplay' ) ) {
+            \IMS\PublicDisplay::instance()->init();
+        }
+    }
+
+    load_plugin_textdomain( 'invoice-management-system', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'plugins_loaded', 'ims_run' );
