@@ -1,7 +1,7 @@
 /* admin/css/ims-admin.css
 Styles for the Invoice metaboxes (uses Montserrat)
 */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap'); */
 
 /* Invoices status filter colors */
 .subsubsub a[href*="meta_value=pending"] {
