@@ -3,7 +3,7 @@
  * Plugin Name:     Invoice Management System
  * Plugin URI:      https://autocomputation.com/
  * Description:     Create and manage Invoices as a custom post type.
- * Version:         1.0.0
+ * Version:         2.0.0
  * Author:          Sayan Paul
  * Text Domain:     invoice-management-system
  * Domain Path:     /languages
@@ -21,12 +21,12 @@ define( 'IMS_VERSION', '1.0.0' );
 // --- safe includes with output capture (prevents unexpected activation output) ---
 $includes = [
     'includes/class-ims-cpt.php',
-    // 'includes/class-ims-taxonomies.php',
+    'includes/class-ims-taxonomies.php',
     'includes/class-ims-metaboxes.php',
     'includes/class-ims-n8n.php',
     'includes/class-ims-shortcodes.php',
-    // 'includes/class-ims-elementor-handler.php',
-    // 'includes/class-ims-helpers.php',
+    'includes/class-ims-elementor-handler.php',
+    'includes/class-ims-helpers.php',
 ];
 
 // Start buffering so that any unexpected echo/notice doesn't reach browser
@@ -44,7 +44,7 @@ foreach ( $includes as $rel ) {
 // Include admin/public classes separately (optional)
 $admin_files = [
     'admin/class-ims-admin.php',
-    // 'admin/class-ims-dashboard.php',
+    'admin/class-ims-dashboard.php',
     'public/class-ims-public.php',
 ];
 
@@ -68,11 +68,15 @@ if ( $captured !== '' ) {
 
 
 /**
- * Runs on plugin activation: register CPT & taxonomies, then flush rewrite rules.
+ * Runs on plugin activation:
+ *
+ * IMPORTANT: Do NOT call do_action('init') here. Manually firing 'init' can cause other plugins (Elementor, etc.)
+ * to run their init code in an activation context — which may lead to classes being included/declared twice.
+ *
+ * We'll register our CPTs directly and ask WP to flush rewrite rules on the next normal init.
  */
 function ims_activate() {
-    ob_start();
-    // register CPT & taxonomies
+    // Register CPT & taxonomies directly (these methods should only register the post type/taxonomies)
     if ( class_exists( '\IMS\CPT' ) ) {
         \IMS\CPT::instance()->register();
     }
@@ -80,15 +84,23 @@ function ims_activate() {
         \IMS\Taxonomies::instance()->register();
     }
 
-    do_action( 'init' );
-    flush_rewrite_rules();
-    $buf = ob_get_clean();
-    if ( $buf !== '' ) {
-        error_log( 'IMS activation unexpected output (truncated): ' . substr( $buf, 0, 2000 ) );
-    }
+    // Set a transient/option so we can flush rewrite rules safely on the next normal init.
+    // (Avoids firing core hooks during activation.)
+    update_option( 'ims_flush_rewrite_rules', 1 );
 }
 register_activation_hook( __FILE__, 'ims_activate' );
 
+/**
+ * On normal init, flush rewrite rules if activation asked us to.
+ */
+function ims_maybe_flush_rewrite_rules() {
+    if ( get_option( 'ims_flush_rewrite_rules' ) ) {
+        // Flush rewrite rules once
+        flush_rewrite_rules();
+        delete_option( 'ims_flush_rewrite_rules' );
+    }
+}
+add_action( 'init', 'ims_maybe_flush_rewrite_rules', 20 );
 
 
 /**
