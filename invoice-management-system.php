@@ -21,12 +21,12 @@ define( 'IMS_VERSION', '1.0.0' );
 // --- safe includes with output capture (prevents unexpected activation output) ---
 $includes = [
     'includes/class-ims-cpt.php',
-    'includes/class-ims-taxonomies.php',
+    // 'includes/class-ims-taxonomies.php',
     'includes/class-ims-metaboxes.php',
     'includes/class-ims-n8n.php',
     'includes/class-ims-shortcodes.php',
-    'includes/class-ims-elementor-handler.php',
-    'includes/class-ims-helpers.php',
+    // 'includes/class-ims-elementor-handler.php',
+    // 'includes/class-ims-helpers.php',
 ];
 
 // Start buffering so that any unexpected echo/notice doesn't reach browser
@@ -44,7 +44,7 @@ foreach ( $includes as $rel ) {
 // Include admin/public classes separately (optional)
 $admin_files = [
     'admin/class-ims-admin.php',
-    'admin/class-ims-dashboard.php',
+    // 'admin/class-ims-dashboard.php',
     'public/class-ims-public.php',
 ];
 
