@@ -188,3 +188,221 @@
 }
 
 
+/* IMS public form — two-column layout + accent styling
+   Relies on :root variables defined in your main public CSS:
+   --ims-bg, --ims-card, --ims-accent, --ims-accent-dark, --ims-muted, --ims-border, --ims-radius, --ims-shadow
+*/
+
+/* IMS public form — two-column layout + accent styling
+   Relies on :root variables defined in your main public CSS:
+   --ims-bg, --ims-card, --ims-accent, --ims-accent-dark, --ims-muted, --ims-border, --ims-radius, --ims-shadow
+*/
+
+.ims-form {
+  font-family: 'Montserrat', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 22px;
+  background: var(--ims-card, #fff);
+  border-radius: calc(var(--ims-radius, 10px) - 2px);
+  box-shadow: var(--ims-shadow, 0 6px 20px rgba(0,0,0,0.06));
+  box-sizing: border-box;
+  color: #0f172a;
+}
+
+/* Larger gaps & spacing for better readability */
+.ims-form .ims-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;            /* increased gap between columns */
+  margin-bottom: 20px;  /* increased vertical spacing between rows */
+  align-items: start;
+}
+
+/* Default column — two columns (approx 50% each) */
+.ims-form .ims-col {
+  flex: 0 0 calc(50% - 14px);
+  min-width: 260px;
+  box-sizing: border-box;
+}
+
+/* Full width helpers (if needed you can add class 'ims-full' to an .ims-col) */
+.ims-form .ims-col.ims-full { flex-basis: 100%; min-width: 100%; }
+
+/* Labels: increase size and weight for readability */
+.ims-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 15px;             /* increased from 13px */
+  color: var(--ims-muted, #6b7280);
+}
+
+/* Form controls: use accent color for border as requested (#E1972F via --ims-accent) */
+.ims-form input[type="text"],
+.ims-form input[type="number"],
+.ims-form input[type="email"],
+.ims-form input[type="date"],
+.ims-form select,
+.ims-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--ims-accent, #E1972F); /* changed to accent color */
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: transparent;
+  color: #0f172a;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+/* Focus state */
+.ims-form input:focus,
+.ims-form select:focus,
+.ims-form textarea:focus {
+  outline: none;
+  border-color: var(--ims-accent, #E1972F);
+  box-shadow: 0 8px 22px rgba(225,151,47,0.08);
+}
+
+/* Placeholders subtle */
+.ims-form input::placeholder,
+.ims-form textarea::placeholder {
+  color: #c1b7a6;
+}
+
+/* Suffix wrappers for currency */
+.ims-form .ims-suffix { position: relative; display:block; }
+.ims-form .ims-suffix input { padding-right: 48px; }
+.ims-form .ims-suffix .ims-sfx {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ims-accent-dark, #b37319);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Make numeric inputs right aligned for readability */
+.ims-form input[type="number"] { text-align: right; }
+
+/* Calculated/important readonly fields — highlighted accent boxes */
+.ims-form input[readonly]#_invoice_gst_amount,
+.ims-form input[readonly]#_invoice_total_amount,
+.ims-form input[readonly]#_invoice_total_deduction_amount,
+.ims-form input[readonly]#_invoice_net_payable_amount,
+.ims-form input[readonly]#_invoice_balance_amount {
+  background: linear-gradient(180deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
+  color: #fff;
+  border: none;
+  box-shadow: none;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+/* Keep suffix (₹) white inside highlighted boxes */
+.ims-form input[readonly]#_invoice_gst_amount + .ims-sfx,
+.ims-form input[readonly]#_invoice_total_amount + .ims-sfx,
+.ims-form input[readonly]#_invoice_total_deduction_amount + .ims-sfx,
+.ims-form input[readonly]#_invoice_net_payable_amount + .ims-sfx,
+.ims-form input[readonly]#_invoice_balance_amount + .ims-sfx {
+  color: #fff;
+}
+
+/* Emphasize large info boxes */
+.ims-form .ims-info {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Small helper text */
+.ims-form .ims-note { font-size: 13px; color: var(--ims-muted, #6b7280); margin-top: 6px; }
+
+/* Buttons */
+.ims-form .ims-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(18,70,168,0.08);
+}
+.ims-form .ims-btn:hover { transform: translateY(-2px); }
+
+/* secondary button (remove CC) */
+.ims-form .ims-btn.secondary {
+  background: transparent;
+  color: var(--ims-muted, #6b7280);
+  border: 1px solid var(--ims-border, #e6e9ef);
+  box-shadow: none;
+}
+
+/* CC repeater */
+.ims-form .ims-cc-list p {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin:0 0 8px 0;
+}
+.ims-form .ims-cc-list input { flex: 1 1 auto; }
+
+/* File input styling */
+.ims-form input[type="file"] {
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px dashed var(--ims-border, #e6e9ef);
+  background: transparent;
+  color: #0f172a;
+}
+
+/* no default forced visibility; wrapper visibility will be controlled inline / by JS */
+.ims-hideable { /* controlled by inline style or JS */ }
+
+/* Responsive: stack to single column on small screens */
+@media (max-width: 880px) {
+  .ims-form { padding: 16px; }
+  .ims-form .ims-col { flex: 0 0 100%; min-width: 100%; }
+  .ims-form .ims-sfx { right: 10px; }
+}
+
+/* Very small screens tweaks */
+@media (max-width: 520px) {
+  .ims-form { padding: 12px; }
+  .ims-form label { font-size: 13px; }
+  .ims-form .ims-btn { width: 100%; justify-content:center; }
+}
+
+/* Tiny utilities */
+.ims-form .ims-error { color: #c53030; font-weight: 700; margin-bottom: 8px; }
+.ims-form .ims-success { color: #2d8a3a; font-weight: 700; margin-bottom: 8px; }
+
+/* Accessibility focus */
+.ims-form input:focus, .ims-form select:focus, .ims-form textarea:focus, .ims-form button:focus {
+  outline: 3px solid rgba(225,151,47,0.12);
+  outline-offset: 2px;
+}
+
+/* Remove default number spinner for cleaner look (optional) */
+.ims-form input[type=number]::-webkit-outer-spin-button,
+.ims-form input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Make long labels/values wrap if needed */
+.ims-form .ims-col { word-break: break-word; }
