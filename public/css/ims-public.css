@@ -351,6 +351,11 @@
   box-shadow: none;
 }
 
+.ims-form .ims-btn.secondary.ims-remove-cc {
+  display: block;
+  width: 20%;
+}
+
 /* CC repeater */
 .ims-form .ims-cc-list {
   margin-bottom: 10px;
@@ -362,7 +367,7 @@
   align-items:center;
   margin:0 0 12px 0;
 }
-.ims-form .ims-cc-list input { flex: 1 1 auto; }
+.ims-form .ims-cc-list input { width: 80%; }
 
 /* File input styling */
 .ims-form input[type="file"] {

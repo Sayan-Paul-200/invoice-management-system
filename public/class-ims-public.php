@@ -440,7 +440,7 @@ class PublicDisplay {
                                 ?>
                                 <p>
                                     <input type="email" name="_cc_emails[]" value="<?php echo esc_attr( trim( $c ) ); ?>" />
-                                    <button class="ims-btn secondary ims-remove-cc" type="button" title="<?php esc_attr_e( 'Remove', 'invoice-management-system' ); ?>">&times;</button>
+                                    <button class="ims-btn secondary ims-remove-cc" type="button" title="<?php esc_attr_e( 'Remove', 'invoice-management-system' ); ?>">remove</button>
                                 </p>
                             <?php endforeach; ?>
                         </div>
@@ -685,18 +685,49 @@ class PublicDisplay {
             '_invoice_amount_paid', '_invoice_balance_amount'
         ];
 
+        // Fields that should default to zero if left empty
+        $zero_by_default = [
+            '_invoice_client_amount',
+            '_invoice_retention_amount',
+            '_invoice_gst_withheld',
+            '_invoice_tds_amount',
+            '_invoice_gst_tds_amount',
+            '_invoice_low_depth_deduction_amount',
+            '_invoice_liquidated_damages_amount',
+            '_invoice_sla_penalty_amount',
+            '_invoice_penalty_amount',
+            '_invoice_other_deduction_amount',
+        ];
+
         foreach ( $numeric_fields as $k ) {
             $val = $get( $k );
+
+            // If not submitted or empty
             if ( $val === null || $val === '' ) {
-                delete_post_meta( $post_id, $k );
+                if ( in_array( $k, $zero_by_default, true ) ) {
+                    // Store explicit zero for these fields so server-side calculations have a stable value
+                    update_post_meta( $post_id, $k, 0.0 );
+                } else {
+                    delete_post_meta( $post_id, $k );
+                }
                 continue;
             }
+
+            // Normalize numeric string: remove commas/spaces, keep digits, dot and minus
             $norm = str_replace( [ ',', ' ' ], '', (string) $val );
             $norm = preg_replace( '/[^\d\.\-]/', '', $norm );
+
+            // If still not a valid number, remove meta (defensive)
             if ( $norm === '' || ! preg_match( '/^-?\d+(\.\d+)?$/', $norm ) ) {
-                delete_post_meta( $post_id, $k );
+                if ( in_array( $k, $zero_by_default, true ) ) {
+                    update_post_meta( $post_id, $k, 0.0 );
+                } else {
+                    delete_post_meta( $post_id, $k );
+                }
                 continue;
             }
+
+            // Save normalized float
             update_post_meta( $post_id, $k, floatval( $norm ) );
         }
 

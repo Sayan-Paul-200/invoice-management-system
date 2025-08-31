@@ -132,7 +132,7 @@
         // CC repeater add/remove
         $('#ims-add-cc').on('click', function(e){
             e.preventDefault();
-            var newField = $('<p><input type="email" name="_cc_emails[]" value="" /> <button class="ims-btn secondary ims-remove-cc" type="button">&times;</button></p>');
+            var newField = $('<p><input type="email" name="_cc_emails[]" value="" /> <button class="ims-btn secondary ims-remove-cc" type="button">remove</button></p>');
             $('#ims-cc-list').append(newField);
         });
         $('#ims-cc-list').on('click', '.ims-remove-cc', function(e){
@@ -154,6 +154,47 @@
 
         // init
         initDatepickers();
+
+        // --- set initial 0.00 on certain amount fields and bind focus/blur handlers ---
+        // Place this AFTER initDatepickers() and BEFORE recalcGST()/calcTotals() calls.
+        var zeroFields = [
+            '_invoice_client_amount',
+            '_invoice_retention_amount',
+            '_invoice_gst_withheld',
+            '_invoice_tds_amount',
+            '_invoice_gst_tds_amount',
+            '_invoice_low_depth_deduction_amount',
+            '_invoice_liquidated_damages_amount',
+            '_invoice_sla_penalty_amount',
+            '_invoice_penalty_amount',
+            '_invoice_other_deduction_amount'
+        ];
+
+        zeroFields.forEach(function(id){
+            var $f = $('#' + id);
+            if (!$f.length) return;
+
+            // If field empty (or blank string) set default '0.00'
+            if ( $f.val() === '' || $f.val() === null ) {
+                $f.val('0.00');
+            }
+
+            // Clear default on focus (only if it is the placeholder default)
+            $f.on('focus', function(){
+                if ( $f.val() === '0.00' ) {
+                    $f.val('');
+                }
+            });
+
+            // If left empty, restore default on blur and trigger recalculation
+            $f.on('blur', function(){
+                if ( $f.val() === '' ) {
+                    $f.val('0.00');
+                }
+                // ensure totals update after user leaves a field
+                calcTotals();
+            });
+        });
 
         // ensure initial calculations
         recalcGST();
