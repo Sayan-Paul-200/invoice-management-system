@@ -204,8 +204,8 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_basic_amount"><?php esc_html_e( 'Invoice Basic Amount', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_basic_amount" name="_invoice_basic_amount" value="<?php echo esc_attr( $data['_invoice_basic_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_basic_amount" name="_invoice_basic_amount" value="<?php echo esc_attr( $data['_invoice_basic_amount'] ); ?>" />
                         </div>
                     </div>
 
@@ -223,17 +223,17 @@ class PublicDisplay {
                 <div class="ims-row">
                     <div class="ims-col">
                         <label for="_invoice_gst_amount"><?php esc_html_e( 'Invoice GST Amount', 'invoice-management-system' ); ?></label>
-                        <div class="ims-suffix">
-                            <input type="text" readonly id="_invoice_gst_amount" name="_invoice_gst_amount" value="<?php echo esc_attr( $data['_invoice_gst_amount'] ); ?>" />
+                        <div class="ims-suffix ims-highlight">
                             <span class="ims-sfx">₹</span>
+                            <input type="text" readonly id="_invoice_gst_amount" name="_invoice_gst_amount" value="<?php echo esc_attr( $data['_invoice_gst_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_total_amount"><?php esc_html_e( 'Total Amount', 'invoice-management-system' ); ?></label>
-                        <div class="ims-suffix">
-                            <input type="text" readonly id="_invoice_total_amount" name="_invoice_total_amount" value="<?php echo esc_attr( $data['_invoice_total_amount'] ); ?>" />
+                        <div class="ims-suffix ims-highlight">
                             <span class="ims-sfx">₹</span>
+                            <input type="text" readonly id="_invoice_total_amount" name="_invoice_total_amount" value="<?php echo esc_attr( $data['_invoice_total_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -243,16 +243,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_client_amount"><?php esc_html_e( 'Passed Amount by Client', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_client_amount" name="_invoice_client_amount" value="<?php echo esc_attr( $data['_invoice_client_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_client_amount" name="_invoice_client_amount" value="<?php echo esc_attr( $data['_invoice_client_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_retention_amount"><?php esc_html_e( 'Retention', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_retention_amount" name="_invoice_retention_amount" value="<?php echo esc_attr( $data['_invoice_retention_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_retention_amount" name="_invoice_retention_amount" value="<?php echo esc_attr( $data['_invoice_retention_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -262,16 +262,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_gst_withheld"><?php esc_html_e( 'GST Withheld', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_gst_withheld" name="_invoice_gst_withheld" value="<?php echo esc_attr( $data['_invoice_gst_withheld'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_gst_withheld" name="_invoice_gst_withheld" value="<?php echo esc_attr( $data['_invoice_gst_withheld'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_tds_amount"><?php esc_html_e( 'TDS', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_tds_amount" name="_invoice_tds_amount" value="<?php echo esc_attr( $data['_invoice_tds_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_tds_amount" name="_invoice_tds_amount" value="<?php echo esc_attr( $data['_invoice_tds_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -281,16 +281,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_gst_tds_amount"><?php esc_html_e( 'GST TDS', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_gst_tds_amount" name="_invoice_gst_tds_amount" value="<?php echo esc_attr( $data['_invoice_gst_tds_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_gst_tds_amount" name="_invoice_gst_tds_amount" value="<?php echo esc_attr( $data['_invoice_gst_tds_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_bocw_amount"><?php esc_html_e( 'BOCW', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_bocw_amount" name="_invoice_bocw_amount" value="<?php echo esc_attr( $data['_invoice_bocw_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_bocw_amount" name="_invoice_bocw_amount" value="<?php echo esc_attr( $data['_invoice_bocw_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -300,16 +300,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_low_depth_deduction_amount"><?php esc_html_e( 'Low Depth Deduction', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_low_depth_deduction_amount" name="_invoice_low_depth_deduction_amount" value="<?php echo esc_attr( $data['_invoice_low_depth_deduction_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_low_depth_deduction_amount" name="_invoice_low_depth_deduction_amount" value="<?php echo esc_attr( $data['_invoice_low_depth_deduction_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_liquidated_damages_amount"><?php esc_html_e( 'LD', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_liquidated_damages_amount" name="_invoice_liquidated_damages_amount" value="<?php echo esc_attr( $data['_invoice_liquidated_damages_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_liquidated_damages_amount" name="_invoice_liquidated_damages_amount" value="<?php echo esc_attr( $data['_invoice_liquidated_damages_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -319,16 +319,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_sla_penalty_amount"><?php esc_html_e( 'SLA Penalty', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_sla_penalty_amount" name="_invoice_sla_penalty_amount" value="<?php echo esc_attr( $data['_invoice_sla_penalty_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_sla_penalty_amount" name="_invoice_sla_penalty_amount" value="<?php echo esc_attr( $data['_invoice_sla_penalty_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_penalty_amount"><?php esc_html_e( 'Penalty', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_penalty_amount" name="_invoice_penalty_amount" value="<?php echo esc_attr( $data['_invoice_penalty_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_penalty_amount" name="_invoice_penalty_amount" value="<?php echo esc_attr( $data['_invoice_penalty_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -338,16 +338,16 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_other_deduction_amount"><?php esc_html_e( 'Other Deduction', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_other_deduction_amount" name="_invoice_other_deduction_amount" value="<?php echo esc_attr( $data['_invoice_other_deduction_amount'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_other_deduction_amount" name="_invoice_other_deduction_amount" value="<?php echo esc_attr( $data['_invoice_other_deduction_amount'] ); ?>" />
                         </div>
                     </div>
 
                     <div class="ims-col">
                         <label for="_invoice_total_deduction_amount"><?php esc_html_e( 'Total Deduction', 'invoice-management-system' ); ?></label>
-                        <div class="ims-suffix">
-                            <input type="text" readonly id="_invoice_total_deduction_amount" name="_invoice_total_deduction_amount" value="<?php echo esc_attr( $data['_invoice_total_deduction_amount'] ); ?>" />
+                        <div class="ims-suffix ims-highlight">
                             <span class="ims-sfx">₹</span>
+                            <input type="text" readonly id="_invoice_total_deduction_amount" name="_invoice_total_deduction_amount" value="<?php echo esc_attr( $data['_invoice_total_deduction_amount'] ); ?>" />
                         </div>
                     </div>
                 </div>
@@ -356,9 +356,9 @@ class PublicDisplay {
                 <div class="ims-row">
                     <div class="ims-col">
                         <label for="_invoice_net_payable_amount"><?php esc_html_e( 'Net Payable', 'invoice-management-system' ); ?></label>
-                        <div class="ims-suffix">
-                            <input type="text" readonly id="_invoice_net_payable_amount" name="_invoice_net_payable_amount" value="<?php echo esc_attr( $data['_invoice_net_payable_amount'] ); ?>" />
+                        <div class="ims-suffix ims-highlight">
                             <span class="ims-sfx">₹</span>
+                            <input type="text" readonly id="_invoice_net_payable_amount" name="_invoice_net_payable_amount" value="<?php echo esc_attr( $data['_invoice_net_payable_amount'] ); ?>" />
                         </div>
                     </div>
 
@@ -377,8 +377,8 @@ class PublicDisplay {
                     <div class="ims-col">
                         <label for="_invoice_amount_paid"><?php esc_html_e( 'Amount Paid By Client', 'invoice-management-system' ); ?></label>
                         <div class="ims-suffix">
-                            <input type="number" step="0.01" id="_invoice_amount_paid" name="_invoice_amount_paid" value="<?php echo esc_attr( $data['_invoice_amount_paid'] ); ?>" />
                             <span class="ims-sfx">₹</span>
+                            <input type="number" step="0.01" id="_invoice_amount_paid" name="_invoice_amount_paid" value="<?php echo esc_attr( $data['_invoice_amount_paid'] ); ?>" />
                         </div>
                     </div>
 
@@ -395,9 +395,9 @@ class PublicDisplay {
                 <div class="ims-row">
                     <div class="ims-col">
                         <label for="_invoice_balance_amount"><?php esc_html_e( 'Balance', 'invoice-management-system' ); ?></label>
-                        <div class="ims-suffix">
-                            <input type="text" readonly step="0.01" id="_invoice_balance_amount" name="_invoice_balance_amount" value="<?php echo esc_attr( $data['_invoice_balance_amount'] ); ?>" />
+                        <div class="ims-suffix ims-highlight">
                             <span class="ims-sfx">₹</span>
+                            <input type="text" readonly step="0.01" id="_invoice_balance_amount" name="_invoice_balance_amount" value="<?php echo esc_attr( $data['_invoice_balance_amount'] ); ?>" />
                         </div>
                     </div>
 
@@ -410,12 +410,14 @@ class PublicDisplay {
                 <!-- Row 16 -->
                 <div class="ims-row">
                     <div class="ims-col">
-                        <label for="_invoice_file_id"><?php esc_html_e( 'Invoice File', 'invoice-management-system' ); ?></label>
-                        <input type="file" id="_invoice_file_id" name="_invoice_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg" />
-                        <?php if ( ! empty( $data['_invoice_file_url'] ) ) : ?>
-                            <div class="ims-note"><a href="<?php echo esc_url( $data['_invoice_file_url'] ); ?>" target="_blank"><?php esc_html_e( 'View existing file', 'invoice-management-system' ); ?></a></div>
-                        <?php endif; ?>
-                        <div class="ims-note"><?php esc_html_e( 'Max file size: 5MB. Allowed types: pdf, doc, docx, xls, xlsx, csv, png, jpg, jpeg', 'invoice-management-system' ); ?></div>
+                        <div class="ims-file-field">
+                            <label for="_invoice_file_id"><?php esc_html_e( 'Invoice File', 'invoice-management-system' ); ?></label>
+                            <input class="ims-upload-field" type="file" id="_invoice_file_id" name="_invoice_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg" />
+                            <?php if ( ! empty( $data['_invoice_file_url'] ) ) : ?>
+                                <div class="ims-note"><a href="<?php echo esc_url( $data['_invoice_file_url'] ); ?>" target="_blank"><?php esc_html_e( 'View existing file', 'invoice-management-system' ); ?></a></div>
+                            <?php endif; ?>
+                            <div class="ims-note"><?php esc_html_e( 'Max file size: 5MB. Allowed types: pdf, doc, docx, xls, xlsx, csv, png, jpg, jpeg', 'invoice-management-system' ); ?></div>
+                        </div>
                     </div>
 
                     <div class="ims-col">

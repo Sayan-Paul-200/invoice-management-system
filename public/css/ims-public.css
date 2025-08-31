@@ -271,12 +271,12 @@
   color: #c1b7a6;
 }
 
-/* Suffix wrappers for currency */
-.ims-form .ims-suffix { position: relative; display:block; }
-.ims-form .ims-suffix input { padding-right: 48px; }
+/* Prefix-style currency wrapper */
+.ims-form .ims-suffix { position: relative; display: block; }
+.ims-form .ims-suffix input { padding-left: 48px; }  /* reserve left space for prefix */
 .ims-form .ims-suffix .ims-sfx {
   position: absolute;
-  right: 12px;
+  left: 12px;                /* prefix on the left */
   top: 50%;
   transform: translateY(-50%);
   color: var(--ims-accent-dark, #b37319);
@@ -287,30 +287,29 @@
 /* Make numeric inputs right aligned for readability */
 .ims-form input[type="number"] { text-align: right; }
 
-/* Calculated/important readonly fields — highlighted accent boxes */
-.ims-form input[readonly]#_invoice_gst_amount,
-.ims-form input[readonly]#_invoice_total_amount,
-.ims-form input[readonly]#_invoice_total_deduction_amount,
-.ims-form input[readonly]#_invoice_net_payable_amount,
-.ims-form input[readonly]#_invoice_balance_amount {
+/* Highlighted info wrapper (wrap the input with ims-suffix ims-highlight in PHP) */
+.ims-form .ims-suffix.ims-highlight {
+  /* padding: 6px; */
+  border-radius: 10px;
+  overflow: visible;
+}
+
+.ims-form .ims-suffix.ims-highlight input[readonly] {
   background: linear-gradient(180deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
   color: #fff;
   border: none;
   box-shadow: none;
-  padding: 12px;
+  padding: 12px; /* keep space for prefix */
   font-weight: 700;
   font-size: 14px;
-  border-radius: 10px;
-  text-align: left;
+  border-radius: 8px;
+  text-align: end; /* display the value like the screenshot */
 }
 
-/* Keep suffix (₹) white inside highlighted boxes */
-.ims-form input[readonly]#_invoice_gst_amount + .ims-sfx,
-.ims-form input[readonly]#_invoice_total_amount + .ims-sfx,
-.ims-form input[readonly]#_invoice_total_deduction_amount + .ims-sfx,
-.ims-form input[readonly]#_invoice_net_payable_amount + .ims-sfx,
-.ims-form input[readonly]#_invoice_balance_amount + .ims-sfx {
+/* Prefix color inside highlight should be white too */
+.ims-form .ims-suffix.ims-highlight .ims-sfx {
   color: #fff;
+  font-weight: 700;
 }
 
 /* Emphasize large info boxes */
@@ -347,17 +346,21 @@
 /* secondary button (remove CC) */
 .ims-form .ims-btn.secondary {
   background: transparent;
-  color: var(--ims-muted, #6b7280);
-  border: 1px solid var(--ims-border, #e6e9ef);
+  color: var(--ims-accent);
+  border: 2px solid var(--ims-accent-dark);
   box-shadow: none;
 }
 
 /* CC repeater */
+.ims-form .ims-cc-list {
+  margin-bottom: 10px;
+}
+
 .ims-form .ims-cc-list p {
   display:flex;
   gap:8px;
   align-items:center;
-  margin:0 0 8px 0;
+  margin:0 0 12px 0;
 }
 .ims-form .ims-cc-list input { flex: 1 1 auto; }
 
@@ -368,6 +371,81 @@
   border: 2px dashed var(--ims-border, #e6e9ef);
   background: transparent;
   color: #0f172a;
+}
+
+/* IMS file-field styling (plugin-local, no Elementor classes) */
+.ims-file-field {
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  font-family: inherit;
+  margin-bottom: 6px;
+}
+
+/* Native file input styled to match other controls */
+.ims-file-field input.ims-upload-field[type="file"] {
+  display: block;
+  width: 100%;
+  /* height: 60px; */
+  /* padding: 12px; */
+  align-content: center;
+  border-radius: 8px;
+  border: 2px solid var(--ims-accent, #E1972F);
+  background: #fff;
+  color: var(--ims-muted, #6b7280);
+  font-size: 0.95rem;
+  line-height: 1;
+  box-sizing: border-box;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Modern file button styling (file-selector button) */
+.ims-file-field input.ims-upload-field[type="file"]::file-selector-button {
+  margin-right: 12px;
+  border: none;
+  /* padding: 8px 12px; */
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* WebKit fallback for older browsers */
+.ims-file-field input.ims-upload-field[type="file"]::-webkit-file-upload-button {
+  margin-right: 12px;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--ims-accent, #E1972F), var(--ims-accent-dark, #b37319));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Hover / focus affordances */
+.ims-file-field input.ims-upload-field[type="file"]::file-selector-button,
+.ims-file-field input.ims-upload-field[type="file"]::-webkit-file-upload-button {
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.ims-file-field input.ims-upload-field[type="file"]::file-selector-button:hover,
+.ims-file-field input.ims-upload-field[type="file"]::-webkit-file-upload-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.98;
+}
+.ims-file-field input.ims-upload-field[type="file"]:focus {
+  outline: 3px solid rgba(225,151,47,0.18);
+  outline-offset: 2px;
+}
+
+/* Error state (if you add an .error class on wrapper) */
+.ims-file-field.error input.ims-upload-field[type="file"] {
+  border-color: rgba(255,107,107,0.5);
 }
 
 /* no default forced visibility; wrapper visibility will be controlled inline / by JS */
@@ -385,6 +463,12 @@
   .ims-form { padding: 12px; }
   .ims-form label { font-size: 13px; }
   .ims-form .ims-btn { width: 100%; justify-content:center; }
+  .ims-file-field input.ims-upload-field[type="file"] { height: 56px; padding: 10px; }
+  .ims-file-field input.ims-upload-field[type="file"]::file-selector-button,
+  .ims-file-field input.ims-upload-field[type="file"]::-webkit-file-upload-button {
+    padding: 7px 14px;
+    font-size: 0.94rem;
+  }
 }
 
 /* Tiny utilities */
