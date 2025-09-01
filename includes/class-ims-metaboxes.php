@@ -494,6 +494,9 @@ class Metaboxes {
 
 
     public function save_metaboxes( $post_id, $post ) {
+
+        error_log( 'IMS: save_metaboxes START — post_id=' . intval( $post_id ) . ' user=' . get_current_user_id() );
+
         // Skip autosave, revisions, AJAX, etc.
         if (
             ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||

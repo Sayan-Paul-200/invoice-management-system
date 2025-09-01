@@ -163,6 +163,7 @@
             '_invoice_gst_withheld',
             '_invoice_tds_amount',
             '_invoice_gst_tds_amount',
+            '_invoice_bocw_amount',
             '_invoice_low_depth_deduction_amount',
             '_invoice_liquidated_damages_amount',
             '_invoice_sla_penalty_amount',

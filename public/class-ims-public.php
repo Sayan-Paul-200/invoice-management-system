@@ -17,11 +17,14 @@ class PublicDisplay {
     public static function instance() {
         if ( self::$instance === null ) {
             self::$instance = new self();
+            error_log( 'IMS: PublicDisplay::instance created' );
         }
         return self::$instance;
     }
 
     public function init() {
+        error_log( 'IMS: PublicDisplay::init called' );
+        
         // Shortcode to render form
         add_shortcode( 'ims_invoice_form', [ $this, 'shortcode_invoice_form' ] );
 
@@ -453,8 +456,17 @@ class PublicDisplay {
                 </div>
 
                 <!-- Submit -->
-                <div style="margin-top:14px;">
-                    <button class="ims-btn" type="submit"><?php esc_html_e( 'Submit Invoice', 'invoice-management-system' ); ?></button>
+                <div style="margin-top:40px;">
+                    <button class="ims-btn ims-btn-submit" type="submit" aria-label="<?php esc_attr_e( 'Submit Invoice', 'invoice-management-system' ); ?>">
+                        <?php esc_html_e( 'Submit Invoice', 'invoice-management-system' ); ?>
+                        <span class="ims-btn-icon" aria-hidden="true">
+                            <!-- simple paper-plane SVG icon (keeps everything self-contained) -->
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false" role="img" aria-hidden="true">
+                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.06"/>
+                            </svg>
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -527,102 +539,136 @@ class PublicDisplay {
     }
 
     public function handle_submission() {
-        // Only accept POST
-        if ( ! isset( $_POST ) || strtolower( $_SERVER['REQUEST_METHOD'] ) !== 'post' ) {
+        // Trace start
+        error_log( 'IMS: handle_submission START' );
+
+        // Ensure this is a POST request
+        if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || $_SERVER['REQUEST_METHOD'] !== 'POST' ) {
+            error_log( 'IMS: handle_submission - not a POST' );
             $this->redirect_with_message( '', __( 'Invalid request method', 'invoice-management-system' ) );
         }
 
-        // Nonce
+        // Nonce check
         if ( ! isset( $_POST['ims_public_invoice_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ims_public_invoice_nonce'] ), 'ims_public_invoice_nonce' ) ) {
+            error_log( 'IMS: handle_submission - nonce failed' );
             $this->redirect_with_message( '', __( 'Nonce verification failed', 'invoice-management-system' ) );
         }
+        error_log( 'IMS: handle_submission - nonce ok' );
 
-        // Require logged in to submit. (Change if you want public submissions)
+        // Login requirement
         if ( ! is_user_logged_in() ) {
+            error_log( 'IMS: handle_submission - user not logged in' );
             $this->redirect_with_message( '', __( 'You must be logged in to submit invoices.', 'invoice-management-system' ) );
         }
-
         $current_user = wp_get_current_user();
+        error_log( 'IMS: handle_submission - user id: ' . intval( $current_user->ID ) );
 
         // Gather inputs safely (unslash + sanitize)
         $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
         $title   = isset( $_POST['post_title'] ) ? sanitize_text_field( wp_unslash( $_POST['post_title'] ) ) : '';
         $content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
 
+        error_log( 'IMS: handle_submission - title length: ' . strlen( $title ) . ' post_id: ' . $post_id );
+
         if ( empty( $title ) ) {
+            error_log( 'IMS: handle_submission - title empty' );
             $this->redirect_with_message( $post_id, __( 'Invoice Number (title) cannot be empty.', 'invoice-management-system' ) );
         }
 
         // Date validation
         $invoice_date    = isset( $_POST['_invoice_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_invoice_date'] ) ) : '';
         $submission_date = isset( $_POST['_submission_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_submission_date'] ) ) : '';
+        error_log( 'IMS: handle_submission - invoice_date: ' . $invoice_date . ' submission_date: ' . $submission_date );
         if ( $invoice_date && $submission_date ) {
             $inv_ts = strtotime( $invoice_date );
             $sub_ts = strtotime( $submission_date );
             if ( $inv_ts === false || $sub_ts === false || $inv_ts > $sub_ts ) {
+                error_log( 'IMS: handle_submission - date validation failed' );
                 $this->redirect_with_message( $post_id, __( 'Submission Date must be the same or later than Invoice Date.', 'invoice-management-system' ) );
             }
         }
 
         // Payment date rule
         $payment_date = isset( $_POST['_payment_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_payment_date'] ) ) : '';
+        error_log( 'IMS: handle_submission - payment_date: ' . $payment_date );
         if ( $payment_date && $submission_date ) {
             $pd_ts  = strtotime( $payment_date );
             $sub_ts = strtotime( $submission_date );
             if ( $pd_ts === false || $pd_ts < $sub_ts ) {
+                error_log( 'IMS: handle_submission - payment date validation failed' );
                 $this->redirect_with_message( $post_id, __( 'Payment Date must be the same or later than Submission Date.', 'invoice-management-system' ) );
             }
         }
 
-        // Create / update post (same as before)
-        $is_update = false;
-        if ( $post_id > 0 ) {
-            $existing = get_post( $post_id );
-            if ( $existing && $existing->post_type === 'ac_invoice' ) {
-                if ( ! current_user_can( 'edit_post', $post_id ) ) {
-                    $this->redirect_with_message( $post_id, __( 'You do not have permission to edit this invoice.', 'invoice-management-system' ) );
+        // Create or update post
+        try {
+            $is_update = false;
+            if ( $post_id > 0 ) {
+                $existing = get_post( $post_id );
+                if ( $existing && $existing->post_type === 'ac_invoice' ) {
+                    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+                        error_log( 'IMS: handle_submission - user cannot edit post ' . $post_id );
+                        $this->redirect_with_message( $post_id, __( 'You do not have permission to edit this invoice.', 'invoice-management-system' ) );
+                    }
+                    $is_update = true;
+                    $postarr = [
+                        'ID' => $post_id,
+                        'post_title' => $title,
+                        'post_content' => $content,
+                        'post_status' => 'publish',
+                    ];
+                    $result = wp_update_post( $postarr, true );
+                    if ( is_wp_error( $result ) ) {
+                        error_log( 'IMS: handle_submission - wp_update_post error: ' . $result->get_error_message() );
+                        $this->redirect_with_message( $post_id, $result->get_error_message() );
+                    }
+                    error_log( 'IMS: handle_submission - updated post ' . $post_id );
+                } else {
+                    $post_id = 0;
                 }
-                $is_update = true;
+            }
+
+            if ( $post_id === 0 ) {
                 $postarr = [
-                    'ID'           => $post_id,
                     'post_title'   => $title,
                     'post_content' => $content,
                     'post_status'  => 'publish',
+                    'post_type'    => 'ac_invoice',
+                    'post_author'  => $current_user->ID,
                 ];
-                $result = wp_update_post( $postarr, true );
-                if ( is_wp_error( $result ) ) {
-                    $this->redirect_with_message( $post_id, $result->get_error_message() );
+                $new_id = wp_insert_post( $postarr, true );
+                if ( is_wp_error( $new_id ) ) {
+                    error_log( 'IMS: handle_submission - wp_insert_post error: ' . $new_id->get_error_message() );
+                    $this->redirect_with_message( 0, $new_id->get_error_message() );
                 }
-            } else {
-                $post_id = 0;
+                $post_id = intval( $new_id );
+                error_log( 'IMS: handle_submission - created post ' . $post_id );
             }
+        } catch ( Exception $e ) {
+            error_log( 'IMS: handle_submission - exception while creating/updating post: ' . $e->getMessage() );
+            $this->redirect_with_message( '', __( 'Server error while creating invoice.', 'invoice-management-system' ) );
         }
 
-        if ( $post_id === 0 ) {
-            $postarr = [
-                'post_title'   => $title,
-                'post_content' => $content,
-                'post_status'  => 'publish',
-                'post_type'    => 'ac_invoice',
-                'post_author'  => $current_user->ID,
-            ];
-            $new_id = wp_insert_post( $postarr, true );
-            if ( is_wp_error( $new_id ) ) {
-                $this->redirect_with_message( 0, $new_id->get_error_message() );
-            }
-            $post_id = intval( $new_id );
+        // Save metas (wrapped with logging)
+        error_log( 'IMS: handle_submission - saving metas' );
+        try {
+            $this->save_meta_from_post( $post_id, $_POST );
+            error_log( 'IMS: handle_submission - metas saved' );
+        } catch ( Exception $e ) {
+            error_log( 'IMS: handle_submission - exception in save_meta_from_post: ' . $e->getMessage() );
+            $this->redirect_with_message( $post_id, __( 'Server error while saving invoice meta.', 'invoice-management-system' ) );
         }
 
-        // Save all metas (same logic)
-        $this->save_meta_from_post( $post_id, $_POST );
-
-        // Handle file upload if present
+        // File upload (if present) - instrumented
         if ( isset( $_FILES['_invoice_file'] ) && ! empty( $_FILES['_invoice_file']['name'] ) ) {
+            error_log( 'IMS: handle_submission - file upload present: ' . $_FILES['_invoice_file']['name'] );
             $file = $_FILES['_invoice_file'];
             if ( isset( $file['error'] ) && intval( $file['error'] ) !== UPLOAD_ERR_OK ) {
+                error_log( 'IMS: handle_submission - upload error code: ' . intval( $file['error'] ) );
                 $this->redirect_with_message( $post_id, sprintf( __( 'File upload error (code %d)', 'invoice-management-system' ), intval( $file['error'] ) ) );
             }
             if ( isset( $file['size'] ) && intval( $file['size'] ) > 5 * 1024 * 1024 ) {
+                error_log( 'IMS: handle_submission - upload size exceed: ' . intval( $file['size'] ) );
                 $this->redirect_with_message( $post_id, __( 'Uploaded file exceeds 5MB limit.', 'invoice-management-system' ) );
             }
 
@@ -632,6 +678,7 @@ class PublicDisplay {
 
             $attach_id = media_handle_upload( '_invoice_file', $post_id );
             if ( is_wp_error( $attach_id ) ) {
+                error_log( 'IMS: handle_submission - media_handle_upload error: ' . $attach_id->get_error_message() );
                 $this->redirect_with_message( $post_id, $attach_id->get_error_message() );
             } else {
                 update_post_meta( $post_id, '_invoice_file_id', intval( $attach_id ) );
@@ -639,21 +686,32 @@ class PublicDisplay {
                 if ( $attach_url ) {
                     update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $attach_url ) );
                 }
+                error_log( 'IMS: handle_submission - file uploaded attach_id: ' . intval( $attach_id ) );
             }
         } else {
-            // Ensure file url exists if id exists
+            error_log( 'IMS: handle_submission - no file provided' );
+            // ensure existing file url meta persisted (kept from your original code)
             $existing_file_id = get_post_meta( $post_id, '_invoice_file_id', true );
             if ( $existing_file_id && ! get_post_meta( $post_id, '_invoice_file_url', true ) ) {
                 $existing_url = wp_get_attachment_url( $existing_file_id );
                 if ( $existing_url ) {
                     update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $existing_url ) );
+                    error_log( 'IMS: handle_submission - restored existing file url' );
                 }
             }
         }
 
-        // compute final server-side derived fields and save
-        $this->compute_and_save_derived_amounts( $post_id );
+        // Compute derived amounts & save
+        error_log( 'IMS: handle_submission - computing derived amounts' );
+        try {
+            $this->compute_and_save_derived_amounts( $post_id );
+            error_log( 'IMS: handle_submission - computed derived amounts' );
+        } catch ( Exception $e ) {
+            error_log( 'IMS: handle_submission - exception in compute_and_save_derived_amounts: ' . $e->getMessage() );
+        }
 
+        // Final redirect
+        error_log( 'IMS: handle_submission - redirecting to success for post_id: ' . $post_id );
         $this->redirect_with_message( $post_id, 'success:' . rawurlencode( __( 'Invoice saved successfully', 'invoice-management-system' ) ) );
     }
 

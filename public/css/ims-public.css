@@ -341,7 +341,52 @@
   text-decoration: none;
   box-shadow: 0 8px 22px rgba(18,70,168,0.08);
 }
-.ims-form .ims-btn:hover { transform: translateY(-2px); }
+/* .ims-form .ims-btn:hover { transform: translateY(-2px); } */
+
+/* Larger submit button with inline icon */
+.ims-form .ims-btn.ims-btn-submit {
+  padding: 14px 20px;            /* bigger tap target */
+  font-size: 16px;              /* larger label */
+  border-radius: 12px;          /* slightly larger radius */
+  gap: 10px;                    /* spacing between text and icon (flex) */
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;             /* optional: ensure reasonably wide button */
+  box-shadow: 0 10px 26px rgba(225,151,47,0.12);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+  display: inline-flex;         /* important so gap & icon align nicely */
+  vertical-align: middle;
+}
+
+/* Icon inside the button */
+.ims-form .ims-btn .ims-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  line-height: 0;               /* keeps svg vertically centered */
+}
+
+/* scale-up hover */
+.ims-form .ims-btn.ims-btn-submit:hover,
+.ims-form .ims-btn.ims-btn-submit:focus {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(225,151,47,0.16);
+}
+
+/* Make sure SVG inherits color and is sized */
+.ims-form .ims-btn .ims-btn-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  color: #fff;                  /* svg stroke/fill uses currentColor */
+}
+
+/* If you want the icon to use accent color and text be white, keep defaults.
+   If button background is light, override color accordingly:
+.ims-form .ims-btn.ims-btn-submit { background: var(--ims-accent); color: #fff; }
+*/
+
 
 /* secondary button (remove CC) */
 .ims-form .ims-btn.secondary {

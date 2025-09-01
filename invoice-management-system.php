@@ -142,3 +142,12 @@ function ims_run() {
     load_plugin_textdomain( 'invoice-management-system', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'plugins_loaded', 'ims_run' );
+
+error_log( 'IMS: plugin bootstrap loaded' );
+
+add_action( 'admin_post_ims_submit_invoice', function() {
+    error_log( 'IMS: admin_post_ims_submit_invoice fired (logged from test hook)' );
+}, 1 );
+add_action( 'admin_post_nopriv_ims_submit_invoice', function() {
+    error_log( 'IMS: admin_post_nopriv_ims_submit_invoice fired (logged from test hook)' );
+}, 1 );
