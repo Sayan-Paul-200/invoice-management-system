@@ -34,6 +34,14 @@ class PublicDisplay {
         // Handle form submissions via admin-post.php
         add_action( 'admin_post_ims_submit_invoice', [ $this, 'handle_submission' ] );
         add_action( 'admin_post_nopriv_ims_submit_invoice', [ $this, 'handle_submission' ] );
+
+        // TEMP DIAGNOSTICS - remove after debug
+        add_action( 'admin_post_ims_submit_invoice', function() {
+            error_log( 'IMS: admin_post_ims_submit_invoice closure fired' );
+        }, 0 );
+        add_action( 'admin_post_nopriv_ims_submit_invoice', function() {
+            error_log( 'IMS: admin_post_nopriv_ims_submit_invoice closure fired' );
+        }, 0 );
     }
 
     /**
@@ -539,23 +547,23 @@ class PublicDisplay {
     }
 
     public function handle_submission() {
-        // Trace start
+        // start trace
         error_log( 'IMS: handle_submission START' );
 
-        // Ensure this is a POST request
-        if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || $_SERVER['REQUEST_METHOD'] !== 'POST' ) {
+        // Only accept POST
+        if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || strtoupper( $_SERVER['REQUEST_METHOD'] ) !== 'POST' ) {
             error_log( 'IMS: handle_submission - not a POST' );
             $this->redirect_with_message( '', __( 'Invalid request method', 'invoice-management-system' ) );
         }
 
-        // Nonce check
+        // Nonce: public form uses ims_public_invoice_nonce
         if ( ! isset( $_POST['ims_public_invoice_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ims_public_invoice_nonce'] ), 'ims_public_invoice_nonce' ) ) {
             error_log( 'IMS: handle_submission - nonce failed' );
             $this->redirect_with_message( '', __( 'Nonce verification failed', 'invoice-management-system' ) );
         }
         error_log( 'IMS: handle_submission - nonce ok' );
 
-        // Login requirement
+        // Logged-in requirement (you can change if you want public submissions)
         if ( ! is_user_logged_in() ) {
             error_log( 'IMS: handle_submission - user not logged in' );
             $this->redirect_with_message( '', __( 'You must be logged in to submit invoices.', 'invoice-management-system' ) );
@@ -563,22 +571,44 @@ class PublicDisplay {
         $current_user = wp_get_current_user();
         error_log( 'IMS: handle_submission - user id: ' . intval( $current_user->ID ) );
 
-        // Gather inputs safely (unslash + sanitize)
+        // Normalize raw POST fields into a simple $fields[ id ] => value map
+        $raw = $_POST;
+        $fields = [];
+
+        foreach ( $raw as $k => $v ) {
+            // ignore our action field and nonce etc
+            if ( in_array( $k, [ 'action', 'ims_public_invoice_nonce' ], true ) ) {
+                continue;
+            }
+            // If field is an array (repeater cc_emails etc), keep as-is
+            if ( is_array( $v ) ) {
+                $fields[ $k ] = $v;
+                continue;
+            }
+            // plain scalar
+            $fields[ $k ] = wp_unslash( $v );
+        }
+
+        // small helper to get field safe
+        $get_field = function( $id ) use ( $fields ) {
+            if ( ! isset( $fields[ $id ] ) ) {
+                return null;
+            }
+            return $fields[ $id ];
+        };
+
+        // Minimal validation: title must exist
         $post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
-        $title   = isset( $_POST['post_title'] ) ? sanitize_text_field( wp_unslash( $_POST['post_title'] ) ) : '';
-        $content = isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '';
-
-        error_log( 'IMS: handle_submission - title length: ' . strlen( $title ) . ' post_id: ' . $post_id );
-
+        $title_raw = $get_field( 'post_title' );
+        $title = $title_raw !== null ? sanitize_text_field( (string) $title_raw ) : '';
         if ( empty( $title ) ) {
             error_log( 'IMS: handle_submission - title empty' );
             $this->redirect_with_message( $post_id, __( 'Invoice Number (title) cannot be empty.', 'invoice-management-system' ) );
         }
 
-        // Date validation
-        $invoice_date    = isset( $_POST['_invoice_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_invoice_date'] ) ) : '';
-        $submission_date = isset( $_POST['_submission_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_submission_date'] ) ) : '';
-        error_log( 'IMS: handle_submission - invoice_date: ' . $invoice_date . ' submission_date: ' . $submission_date );
+        // Basic date sanity (but do not wp_die — redirect_with_message instead)
+        $invoice_date    = $get_field( '_invoice_date' ) !== null ? sanitize_text_field( (string) $get_field( '_invoice_date' ) ) : '';
+        $submission_date = $get_field( '_submission_date' ) !== null ? sanitize_text_field( (string) $get_field( '_submission_date' ) ) : '';
         if ( $invoice_date && $submission_date ) {
             $inv_ts = strtotime( $invoice_date );
             $sub_ts = strtotime( $submission_date );
@@ -588,9 +618,8 @@ class PublicDisplay {
             }
         }
 
-        // Payment date rule
-        $payment_date = isset( $_POST['_payment_date'] ) ? sanitize_text_field( wp_unslash( $_POST['_payment_date'] ) ) : '';
-        error_log( 'IMS: handle_submission - payment_date: ' . $payment_date );
+        // Payment date check
+        $payment_date = $get_field( '_payment_date' ) !== null ? sanitize_text_field( (string) $get_field( '_payment_date' ) ) : '';
         if ( $payment_date && $submission_date ) {
             $pd_ts  = strtotime( $payment_date );
             $sub_ts = strtotime( $submission_date );
@@ -613,8 +642,8 @@ class PublicDisplay {
                     $is_update = true;
                     $postarr = [
                         'ID' => $post_id,
-                        'post_title' => $title,
-                        'post_content' => $content,
+                        'post_title' => wp_strip_all_tags( $title ),
+                        'post_content' => isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '',
                         'post_status' => 'publish',
                     ];
                     $result = wp_update_post( $postarr, true );
@@ -630,8 +659,8 @@ class PublicDisplay {
 
             if ( $post_id === 0 ) {
                 $postarr = [
-                    'post_title'   => $title,
-                    'post_content' => $content,
+                    'post_title'   => wp_strip_all_tags( $title ),
+                    'post_content' => isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '',
                     'post_status'  => 'publish',
                     'post_type'    => 'ac_invoice',
                     'post_author'  => $current_user->ID,
@@ -644,22 +673,74 @@ class PublicDisplay {
                 $post_id = intval( $new_id );
                 error_log( 'IMS: handle_submission - created post ' . $post_id );
             }
-        } catch ( Exception $e ) {
+        } catch ( \Throwable $e ) {
             error_log( 'IMS: handle_submission - exception while creating/updating post: ' . $e->getMessage() );
             $this->redirect_with_message( '', __( 'Server error while creating invoice.', 'invoice-management-system' ) );
         }
 
-        // Save metas (wrapped with logging)
-        error_log( 'IMS: handle_submission - saving metas' );
-        try {
-            $this->save_meta_from_post( $post_id, $_POST );
-            error_log( 'IMS: handle_submission - metas saved' );
-        } catch ( Exception $e ) {
-            error_log( 'IMS: handle_submission - exception in save_meta_from_post: ' . $e->getMessage() );
-            $this->redirect_with_message( $post_id, __( 'Server error while saving invoice meta.', 'invoice-management-system' ) );
+        // Map fields => meta keys in a tidy map (same mapping you used earlier)
+        $map_simple = [
+            '_ims_project' => '_ims_project',
+            '_ims_project_mode' => '_ims_project_mode',
+            '_ims_location' => '_ims_location',
+            '_invoice_bill_category' => '_invoice_bill_category',
+            '_invoice_milestone' => '_invoice_milestone',
+            '_invoice_date' => '_invoice_date',
+            '_submission_date' => '_submission_date',
+            '_invoice_status' => '_invoice_status',
+            '_payment_date' => '_payment_date',
+            '_to_email' => '_to_email',
+        ];
+
+        foreach ( $map_simple as $field => $meta ) {
+            $val = $get_field( $field );
+            if ( $val === null || $val === '' ) {
+                delete_post_meta( $post_id, $meta );
+                continue;
+            }
+            update_post_meta( $post_id, $meta, sanitize_text_field( (string) $val ) );
         }
 
-        // File upload (if present) - instrumented
+        // Numeric fields: normalize & save
+        $numeric_fields = [
+            '_invoice_basic_amount', '_invoice_gst_percent', '_invoice_gst_amount', '_invoice_total_amount',
+            '_invoice_client_amount', '_invoice_retention_amount', '_invoice_gst_withheld', '_invoice_tds_amount',
+            '_invoice_gst_tds_amount', '_invoice_bocw_amount', '_invoice_low_depth_deduction_amount',
+            '_invoice_liquidated_damages_amount', '_invoice_sla_penalty_amount', '_invoice_penalty_amount',
+            '_invoice_other_deduction_amount', '_invoice_total_deduction_amount', '_invoice_net_payable_amount',
+            '_invoice_amount_paid', '_invoice_balance_amount'
+        ];
+
+        foreach ( $numeric_fields as $nf ) {
+            $rawv = $get_field( $nf );
+            if ( $rawv === null || $rawv === '' ) {
+                // do not force-delete here — keep previous behavior (delete meta if not submitted)
+                delete_post_meta( $post_id, $nf );
+                continue;
+            }
+            $norm = str_replace( [ ',', ' ' ], '', (string) $rawv );
+            $norm = preg_replace( '/[^\d\.\-]/', '', $norm );
+            if ( $norm === '' || ! preg_match( '/^-?\d+(\.\d+)?$/', $norm ) ) {
+                delete_post_meta( $post_id, $nf );
+                continue;
+            }
+            update_post_meta( $post_id, $nf, floatval( $norm ) );
+        }
+
+        // CC emails: accept array or CSV-ish text
+        $cc_raw = $get_field( '_cc_emails' );
+        if ( $cc_raw !== null ) {
+            if ( is_array( $cc_raw ) ) {
+                $ccs = $cc_raw;
+            } else {
+                $ccs = preg_split( '/[,\n\r;]+/', (string) $cc_raw );
+            }
+            $cc_emails = array_filter( array_map( 'sanitize_email', array_map( 'trim', (array) $ccs ) ) );
+            update_post_meta( $post_id, '_cc_emails', $cc_emails );
+        }
+
+        // File handling: support direct file upload (from $_FILES), attachment ID or URL in form field
+        // 1) check for $_FILES upload
         if ( isset( $_FILES['_invoice_file'] ) && ! empty( $_FILES['_invoice_file']['name'] ) ) {
             error_log( 'IMS: handle_submission - file upload present: ' . $_FILES['_invoice_file']['name'] );
             $file = $_FILES['_invoice_file'];
@@ -689,29 +770,60 @@ class PublicDisplay {
                 error_log( 'IMS: handle_submission - file uploaded attach_id: ' . intval( $attach_id ) );
             }
         } else {
-            error_log( 'IMS: handle_submission - no file provided' );
-            // ensure existing file url meta persisted (kept from your original code)
-            $existing_file_id = get_post_meta( $post_id, '_invoice_file_id', true );
-            if ( $existing_file_id && ! get_post_meta( $post_id, '_invoice_file_url', true ) ) {
-                $existing_url = wp_get_attachment_url( $existing_file_id );
-                if ( $existing_url ) {
-                    update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $existing_url ) );
-                    error_log( 'IMS: handle_submission - restored existing file url' );
+            // 2) maybe form submitted an attachment ID or URL in a text field (support for other form providers)
+            $maybe_file = $get_field( '_invoice_file_id' ) ?: $get_field( '_invoice_file_url' ) ?: $get_field( 'invoice_file' );
+            if ( $maybe_file ) {
+                // numeric => attachment id
+                if ( is_numeric( $maybe_file ) ) {
+                    $aid = intval( $maybe_file );
+                    if ( $aid ) {
+                        update_post_meta( $post_id, '_invoice_file_id', $aid );
+                        $url = wp_get_attachment_url( $aid );
+                        if ( $url ) update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $url ) );
+                    }
+                } else {
+                    // treat as URL; try sideload
+                    $file_url = esc_url_raw( (string) $maybe_file );
+                    if ( filter_var( $file_url, FILTER_VALIDATE_URL ) ) {
+                        require_once ABSPATH . 'wp-admin/includes/file.php';
+                        require_once ABSPATH . 'wp-admin/includes/media.php';
+                        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+                        $tmp = download_url( $file_url );
+                        if ( ! is_wp_error( $tmp ) ) {
+                            $file_name = wp_basename( $file_url );
+                            $file_array = [ 'name' => $file_name, 'tmp_name' => $tmp ];
+                            $attach_id = media_handle_sideload( $file_array, $post_id );
+                            if ( is_wp_error( $attach_id ) ) {
+                                @unlink( $tmp );
+                                error_log( 'IMS: handle_submission - media_handle_sideload failed: ' . $attach_id->get_error_message() );
+                            } else {
+                                update_post_meta( $post_id, '_invoice_file_id', intval( $attach_id ) );
+                                $attach_url = wp_get_attachment_url( $attach_id );
+                                if ( $attach_url ) update_post_meta( $post_id, '_invoice_file_url', esc_url_raw( $attach_url ) );
+                                error_log( 'IMS: handle_submission - sideloaded file attach_id: ' . intval( $attach_id ) );
+                            }
+                        } else {
+                            error_log( 'IMS: handle_submission - download_url failed: ' . $tmp->get_error_message() );
+                        }
+                    }
                 }
+            } else {
+                // keep existing attachment meta if any (no changes)
+                error_log( 'IMS: handle_submission - no file provided' );
             }
         }
 
-        // Compute derived amounts & save
-        error_log( 'IMS: handle_submission - computing derived amounts' );
+        // Compute final server-side derived fields and save
         try {
             $this->compute_and_save_derived_amounts( $post_id );
-            error_log( 'IMS: handle_submission - computed derived amounts' );
-        } catch ( Exception $e ) {
-            error_log( 'IMS: handle_submission - exception in compute_and_save_derived_amounts: ' . $e->getMessage() );
+            error_log( 'IMS: handle_submission - computed derived amounts for ' . $post_id );
+        } catch ( \Throwable $e ) {
+            error_log( 'IMS: handle_submission - compute error: ' . $e->getMessage() );
         }
 
-        // Final redirect
-        error_log( 'IMS: handle_submission - redirecting to success for post_id: ' . $post_id );
+        // done -> redirect back with success
+        error_log( 'IMS: handle_submission - redirecting success for post ' . $post_id );
         $this->redirect_with_message( $post_id, 'success:' . rawurlencode( __( 'Invoice saved successfully', 'invoice-management-system' ) ) );
     }
 
