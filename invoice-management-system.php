@@ -145,9 +145,9 @@ add_action( 'plugins_loaded', 'ims_run' );
 
 error_log( 'IMS: plugin bootstrap loaded' );
 
-add_action( 'admin_post_ims_submit_invoice', function() {
-    error_log( 'IMS: admin_post_ims_submit_invoice fired (logged from test hook)' );
-}, 1 );
-add_action( 'admin_post_nopriv_ims_submit_invoice', function() {
-    error_log( 'IMS: admin_post_nopriv_ims_submit_invoice fired (logged from test hook)' );
-}, 1 );
+// in your plugin bootstrap (the file that loads classes and calls instance()->init())
+// add after you load the PublicDisplay class file, but before/after calling init()
+// (safe to do regardless of whether PublicDisplay::init() also registers hooks)
+
+add_action( 'admin_post_ims_submit_invoice', ['\IMS\PublicDisplay', 'proxy_handle_submission'], 9 );
+add_action( 'admin_post_nopriv_ims_submit_invoice', ['\IMS\PublicDisplay', 'proxy_handle_submission'], 9 );

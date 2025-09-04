@@ -23,7 +23,6 @@ class PublicDisplay {
     }
 
     public function init() {
-        error_log( 'IMS: PublicDisplay::init called' );
         
         // Shortcode to render form
         add_shortcode( 'ims_invoice_form', [ $this, 'shortcode_invoice_form' ] );
@@ -32,16 +31,14 @@ class PublicDisplay {
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 
         // Handle form submissions via admin-post.php
-        add_action( 'admin_post_ims_submit_invoice', [ $this, 'handle_submission' ] );
-        add_action( 'admin_post_nopriv_ims_submit_invoice', [ $this, 'handle_submission' ] );
-
-        // TEMP DIAGNOSTICS - remove after debug
+        // REPLACE original registrations with closure wrapper to ensure we run early
         add_action( 'admin_post_ims_submit_invoice', function() {
-            error_log( 'IMS: admin_post_ims_submit_invoice closure fired' );
+            \IMS\PublicDisplay::instance()->handle_submission();
         }, 0 );
         add_action( 'admin_post_nopriv_ims_submit_invoice', function() {
-            error_log( 'IMS: admin_post_nopriv_ims_submit_invoice closure fired' );
+            \IMS\PublicDisplay::instance()->handle_submission();
         }, 0 );
+
     }
 
     /**
@@ -822,9 +819,23 @@ class PublicDisplay {
             error_log( 'IMS: handle_submission - compute error: ' . $e->getMessage() );
         }
 
-        // done -> redirect back with success
-        error_log( 'IMS: handle_submission - redirecting success for post ' . $post_id );
-        $this->redirect_with_message( $post_id, 'success:' . rawurlencode( __( 'Invoice saved successfully', 'invoice-management-system' ) ) );
+        // Final redirect — send user to /invoices on success (with message)
+        error_log( 'IMS: handle_submission - redirecting to /invoices for post_id: ' . $post_id );
+
+        // Build canonical invoices URL
+        $target = home_url( '/invoices/' );
+
+        // Append message & invoice id as query params (optional)
+        $sep = ( strpos( $target, '?' ) === false ) ? '?' : '&';
+        $msg = 'success:' . __( 'Invoice saved successfully', 'invoice-management-system' );
+        $target = $target . $sep . 'ims_msg=' . rawurlencode( $msg );
+
+        if ( $post_id ) {
+            $target .= '&invoice_id=' . intval( $post_id );
+        }
+
+        wp_safe_redirect( $target );
+        exit;
     }
 
     protected function save_meta_from_post( $post_id, $raw_post ) {
@@ -942,17 +953,22 @@ class PublicDisplay {
         update_post_meta( $post_id, '_invoice_balance_amount', $balance );
     }
 
-    protected function redirect_with_message( $post_id = 0, $message = '' ) {
+    protected function redirect_with_message( $post_id = 0, $message = '', $redirect_url = '' ) {
         $ref = wp_get_referer();
         if ( ! $ref ) {
             $ref = home_url();
         }
-        $sep = ( strpos( $ref, '?' ) === false ) ? '?' : '&';
-        $q = '?ims_msg=' . rawurlencode( $message );
+
+        // If a specific redirect URL passed, use that instead of referer
+        $target_base = $redirect_url ? $redirect_url : $ref;
+
+        $sep = ( strpos( $target_base, '?' ) === false ) ? '?' : '&';
+        $q = 'ims_msg=' . rawurlencode( $message );
         if ( $post_id ) {
             $q .= '&invoice_id=' . intval( $post_id );
         }
-        wp_safe_redirect( $ref . $sep . ltrim( $q, '?' ) );
+
+        wp_safe_redirect( $target_base . $sep . $q );
         exit;
     }
 
@@ -988,6 +1004,11 @@ class PublicDisplay {
     protected function get_statuses() {
         return [ 'pending' => __( 'Pending', 'invoice-management-system' ), 'paid' => __( 'Paid', 'invoice-management-system' ), 'cancel' => __( 'Cancel', 'invoice-management-system' ), 'credit_note_issued' => __( 'Credit Note Issued', 'invoice-management-system' ) ];
     }
+
+    public static function proxy_handle_submission() {
+        return self::instance()->handle_submission();
+    }
+
 }
 
 // Do not auto-init here; bootstrap should call PublicDisplay::instance()->init();
