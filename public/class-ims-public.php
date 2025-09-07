@@ -31,13 +31,10 @@ class PublicDisplay {
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 
         // Handle form submissions via admin-post.php
-        // REPLACE original registrations with closure wrapper to ensure we run early
-        add_action( 'admin_post_ims_submit_invoice', function() {
-            \IMS\PublicDisplay::instance()->handle_submission();
-        }, 0 );
-        add_action( 'admin_post_nopriv_ims_submit_invoice', function() {
-            \IMS\PublicDisplay::instance()->handle_submission();
-        }, 0 );
+        add_action( 'admin_post_ims_submit_invoice', [ $this, 'handle_submission' ], 10 );
+        add_action( 'admin_post_nopriv_ims_submit_invoice', [ $this, 'handle_submission' ], 10 );
+
+        error_log( 'IMS: PublicDisplay init called — registering admin_post handlers' );
 
     }
 

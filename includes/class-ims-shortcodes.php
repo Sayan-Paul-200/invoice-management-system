@@ -82,7 +82,7 @@ class Shortcodes {
             $title = get_the_title();
 
             // Build front-end edit page URL and add invoice_id param
-            $frontend_edit_url = add_query_arg( 'invoice_id', $post_id, site_url( '/edit-invoice' ) );
+            $frontend_edit_url = add_query_arg( 'invoice_id', $post_id, site_url( '/custom' ) );
 
             // fetch relevant meta (fall back to 0)
             $total_amount    = floatval( get_post_meta( $post_id, '_invoice_total_amount', true ) ?: 0 );
