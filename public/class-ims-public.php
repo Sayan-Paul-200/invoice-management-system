@@ -114,10 +114,10 @@ class PublicDisplay {
         $invoice_id = intval( $atts['invoice_id'] );
         $data = $this->get_prefill_data( $invoice_id );
 
-        if ( ! is_user_logged_in() ) {
-            $login_url = wp_login_url( get_permalink() );
-            return '<div class="ims-form"><p>' . esc_html__( 'You must be logged in to submit or edit invoices.', 'invoice-management-system' ) . ' <a href="' . esc_url( $login_url ) . '">' . esc_html__( 'Log in', 'invoice-management-system' ) . '</a></p></div>';
-        }
+        // if ( ! is_user_logged_in() ) {
+        //     $login_url = wp_login_url( get_permalink() );
+        //     return '<div class="ims-form"><p>' . esc_html__( 'You must be logged in to submit or edit invoices.', 'invoice-management-system' ) . ' <a href="' . esc_url( $login_url ) . '">' . esc_html__( 'Log in', 'invoice-management-system' ) . '</a></p></div>';
+        // }
 
         ob_start();
         ?>
@@ -558,10 +558,10 @@ class PublicDisplay {
         error_log( 'IMS: handle_submission - nonce ok' );
 
         // Logged-in requirement (you can change if you want public submissions)
-        if ( ! is_user_logged_in() ) {
-            error_log( 'IMS: handle_submission - user not logged in' );
-            $this->redirect_with_message( '', __( 'You must be logged in to submit invoices.', 'invoice-management-system' ) );
-        }
+        // if ( ! is_user_logged_in() ) {
+        //     error_log( 'IMS: handle_submission - user not logged in' );
+        //     $this->redirect_with_message( '', __( 'You must be logged in to submit invoices.', 'invoice-management-system' ) );
+        // }
         $current_user = wp_get_current_user();
         error_log( 'IMS: handle_submission - user id: ' . intval( $current_user->ID ) );
 
